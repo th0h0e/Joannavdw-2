@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Font - EnduroWeb */
+@font-face {
+  font-family: 'EnduroWeb';
+  src: url('/fonts/EnduroWeb-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Prevent browser back/forward navigation gestures */
+html, body {
+  overscroll-behavior-x: none;
+}
+
+/* Specifically target the main container */
+main {
+  overscroll-behavior-x: none;
+  /* Ensure smooth and mandatory scroll snap behavior */
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+/* Ensure sections snap properly */
+section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
