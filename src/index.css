@@ -29,3 +29,47 @@ section {
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+
+/* Safari mobile fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Safari-specific styles */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Prevent text size adjustment on orientation change */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Force GPU acceleration for smoother animations */
+  h1, h2, h3 {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform, opacity;
+  }
+}
+
+/* Immersive full-screen experience */
+html, body {
+  /* Fill the entire viewport including safe areas */
+  height: 100vh;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  
+  /* Extend into safe areas on notched devices */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Ensure main container uses full dynamic viewport */
+#root {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Blur effect for slide */
+.blur-slide {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}

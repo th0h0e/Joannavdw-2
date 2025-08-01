@@ -11,67 +11,76 @@ type MediaItem = {
 type SwipeCarouselProps = {
   mediaItems: MediaItem[];
   onActiveIndexChange?: (index: number) => void;
+  isFirstCarousel?: boolean;
 };
 
 // --- Reusable Carousel Component ---
 export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: SwipeCarouselProps) {
-  const { currentSlide, setCurrentSlide, setTotalSlides } = useCarousel();
+  const { currentSlide, setCurrentSlide, setTotalSlides, setIsScrolling } = useCarousel();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const backgroundImageRef = useRef<HTMLDivElement>(null);
+  const blurSlideRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Navigation hints state
-  const [showHints, setShowHints] = useState(false);
   const [showDownHint, setShowDownHint] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
-  const hintTimerRef = useRef<NodeJS.Timeout | null>(null);
   const downHintTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const totalSlides = mediaItems.length + 1; // +1 for blur slide
 
   // Initialize carousel
   useEffect(() => {
-    setTotalSlides(mediaItems.length);
+    setTotalSlides(totalSlides);
     setCurrentSlide(0);
-  }, [mediaItems.length, setTotalSlides, setCurrentSlide]);
+  }, [mediaItems.length, setTotalSlides, setCurrentSlide, totalSlides]);
 
-  // Notify parent of slide changes
+  // Notify parent of slide changes (only for actual media items, not blur slide)
   useEffect(() => {
-    onActiveIndexChange?.(currentSlide);
-  }, [currentSlide, onActiveIndexChange]);
+    if (currentSlide < mediaItems.length) {
+      onActiveIndexChange?.(currentSlide);
+    }
+  }, [currentSlide, onActiveIndexChange, mediaItems.length]);
 
-  // Handle scroll events to update current slide
+  // Handle scroll events to update current slide with debouncing
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
 
     const handleScroll = () => {
+      // Set scrolling state immediately
+      setIsScrolling(true);
+      
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Update slide index calculation
       const scrollLeft = carousel.scrollLeft;
       const slideWidth = carousel.offsetWidth;
       const newSlideIndex = Math.round(scrollLeft / slideWidth);
       
-      if (newSlideIndex !== currentSlide && newSlideIndex >= 0 && newSlideIndex < mediaItems.length) {
+      if (newSlideIndex !== currentSlide && newSlideIndex >= 0 && newSlideIndex < totalSlides) {
         setCurrentSlide(newSlideIndex);
       }
+      
+      // Debounce the end of scrolling with 5ms delay
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 5); // Very short delay for fast response
     };
 
     carousel.addEventListener('scroll', handleScroll, { passive: true });
-    return () => carousel.removeEventListener('scroll', handleScroll);
-  }, [currentSlide, mediaItems.length, setCurrentSlide]);
-
-  // --- Navigation Hints Logic ---
-  useEffect(() => {
-    // Only show hints if there are multiple items and user hasn't interacted
-    if (mediaItems.length > 1 && !userInteracted) {
-      hintTimerRef.current = setTimeout(() => {
-        setShowHints(true);
-      }, 2000);
-    }
-
     return () => {
-      if (hintTimerRef.current) {
-        clearTimeout(hintTimerRef.current);
+      carousel.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [mediaItems.length, userInteracted]);
+  }, [currentSlide, totalSlides, setCurrentSlide, setIsScrolling]);
 
-  // --- Down Hint Logic for Last Slide ---
+  // --- Down Hint Logic for Blur Slide ---
   useEffect(() => {
     // Clear any existing timer
     if (downHintTimerRef.current) {
@@ -79,11 +88,11 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
       setShowDownHint(false);
     }
 
-    // Show down hint when on last slide - independent of horizontal interactions
-    if (currentSlide === mediaItems.length - 1 && mediaItems.length > 1) {
+    // Show down hint when on blur slide (last slide)
+    if (currentSlide === totalSlides - 1 && mediaItems.length > 1) {
       downHintTimerRef.current = setTimeout(() => {
         setShowDownHint(true);
-      }, 2000);
+      }, 150);
     }
 
     return () => {
@@ -96,8 +105,6 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
   const hideHints = () => {
     if (!userInteracted) {
       setUserInteracted(true);
-      setShowHints(false);
-      // Don't hide down hint when user interacts horizontally
     }
   };
 
@@ -117,17 +124,30 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
     );
   }
 
+  const lastImage = mediaItems[mediaItems.length - 1];
+
   return (
     <div className="relative h-full w-full bg-black font-sans" data-carousel="true">
+      {/* Background image for last slide - always visible */}
+      <div
+        ref={backgroundImageRef}
+        className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${lastImage.src})`,
+          zIndex: 5,
+        }}
+      />
+
       {/* Modern CSS Scroll-Snap Carousel */}
       <div
         ref={carouselRef}
-        className="h-full w-full flex snap-x snap-mandatory overflow-x-auto"
+        className="relative h-full w-full flex snap-x snap-mandatory overflow-x-auto"
         style={{ 
           scrollbarWidth: 'none', // Firefox
           msOverflowStyle: 'none', // IE
-          overscrollBehaviorX: 'none',
-          scrollBehavior: 'smooth'
+          overscrollBehaviorX: 'contain',
+          scrollBehavior: 'smooth',
+          zIndex: 10,
         }}
         onScroll={hideHints}
       >
@@ -138,7 +158,8 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
           }
         `}</style>
         
-        {mediaItems.map((item, idx) => (
+        {/* Normal slides (except last one) */}
+        {mediaItems.slice(0, -1).map((item, idx) => (
           <div
             key={`${item.src}-${idx}`}
             className="relative h-full w-full flex-shrink-0 bg-black bg-cover bg-center snap-center"
@@ -150,87 +171,39 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
             aria-label={`Slide ${idx + 1}`}
           />
         ))}
-      </div>
-      
-      {/* Navigation Hints */}
-      <AnimatePresence>
-        {showHints && mediaItems.length > 1 && (
-          <>
-            {/* Right Chevron Hint */}
-            {currentSlide < mediaItems.length - 1 && (
-              <motion.div
-                className="absolute right-8 top-1/2 -translate-y-1/2 z-20 pointer-events-none"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 0.7, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              >
-                <div 
-                  className="text-white drop-shadow-2xl"
-                  dangerouslySetInnerHTML={{ 
-                    __html: feather.icons['chevron-right'].toSvg({ 
-                      width: 32, 
-                      height: 32, 
-                      color: 'white' 
-                    }) 
-                  }} 
-                />
-              </motion.div>
-            )}
-            
-            {/* Left Chevron Hint */}
-            {currentSlide > 0 && (
-              <motion.div
-                className="absolute left-8 top-1/2 -translate-y-1/2 z-20 pointer-events-none"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 0.7, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              >
-                <div 
-                  className="text-white drop-shadow-2xl"
-                  dangerouslySetInnerHTML={{ 
-                    __html: feather.icons['chevron-left'].toSvg({ 
-                      width: 32, 
-                      height: 32, 
-                      color: 'white' 
-                    }) 
-                  }} 
-                />
-              </motion.div>
-            )}
-          </>
-        )}
-      </AnimatePresence>
 
-      {/* Down Chevron Hint for Last Slide */}
+        {/* Transparent last slide */}
+        <div
+          className="relative h-full w-full flex-shrink-0 snap-center"
+          style={{ 
+            minWidth: '100%',
+            background: 'transparent',
+            zIndex: 15,
+          }}
+          role="group"
+          aria-label={`Slide ${mediaItems.length}`}
+        />
+
+        {/* Blur overlay slide */}
+        <div
+          ref={blurSlideRef}
+          className="relative h-full w-full flex-shrink-0 snap-center"
+          style={{ 
+            minWidth: '100%',
+            background: currentSlide === totalSlides - 1 ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+            backdropFilter: currentSlide === totalSlides - 1 ? 'blur(8px)' : 'blur(0px)',
+            WebkitBackdropFilter: currentSlide === totalSlides - 1 ? 'blur(8px)' : 'blur(0px)',
+            zIndex: 15,
+            transition: 'all 0.7s ease-out',
+          }}
+          role="group"
+          aria-label="Blur overlay"
+        />
+      </div>
+
+      {/* Progress Bar */}
       <AnimatePresence>
-        {showDownHint && (
-          <motion.div
-            className="absolute left-1/2 -translate-x-1/2 z-20 cursor-pointer hover:opacity-100"
-            style={{ bottom: '20px' }}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 0.7, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            onClick={scrollToNextSection}
-          >
-            <div 
-              className="text-white drop-shadow-2xl"
-              dangerouslySetInnerHTML={{ 
-                __html: feather.icons['chevron-down'].toSvg({ 
-                  width: 32, 
-                  height: 32, 
-                  color: 'white' 
-                }) 
-              }} 
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      <AnimatePresence>
-        {mediaItems.length > 1 && currentSlide > 0 && currentSlide < mediaItems.length - 1 && (
+        {mediaItems.length > 1 && currentSlide > 0 && currentSlide < totalSlides - 1 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -242,6 +215,31 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
         )}
       </AnimatePresence>
 
+      {/* Down Chevron Hint for Transparent Slide */}
+      <AnimatePresence>
+        {showDownHint && (
+          <motion.div
+            className="absolute z-20 cursor-pointer hover:opacity-100 w-6 h-6"
+            style={{ bottom: '20px', left: '50%', marginLeft: '-12px' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            onClick={scrollToNextSection}
+          >
+            <div 
+              className="text-white drop-shadow-2xl w-full h-full"
+              dangerouslySetInnerHTML={{ 
+                __html: feather.icons['chevron-down'].toSvg({ 
+                  width: window.innerWidth >= 768 ? 28 : 24, 
+                  height: window.innerWidth >= 768 ? 28 : 24, 
+                  color: 'white' 
+                }) 
+              }} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -249,13 +247,13 @@ export default function SwipeCarousel({ mediaItems, onActiveIndexChange }: Swipe
 // --- Progress Bar Sub-component ---
 type ProgressBarProps = { currentIndex: number; totalItems: number };
 const ProgressBar: React.FC<ProgressBarProps> = ({ currentIndex, totalItems }) => {
-  // Calculate progress: 0% at first slide, 100% at last slide
+  // Calculate progress based on actual media items (excluding blur slide)
   const progressPercentage = totalItems > 1 ? (currentIndex / (totalItems - 1)) * 100 : 0;
 
   if (totalItems <= 1) return null;
 
   return (
-    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-4/5">
+    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-full md:w-4/5 px-6 md:px-0">
       <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
         <motion.div
           className="h-full bg-gray-50"
