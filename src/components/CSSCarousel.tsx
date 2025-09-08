@@ -1,35 +1,59 @@
 import { useRef, useEffect, forwardRef, useState } from 'react';
 import { useCarousel } from '../contexts/CarouselContext';
-import feather from 'feather-icons';
+import ChevronDown from './icons/ChevronDown';
+import ChevronRight from './icons/ChevronRight';
 
 // --- Type Definitions ---
+// Simple image object with just a source URL
 type MediaItem = {
   src: string;
 };
 
+// Props this carousel component accepts
 type CSSCarouselProps = {
-  mediaItems: MediaItem[];
-  onActiveIndexChange?: (index: number) => void;
-  isFirstCarousel?: boolean;
+  mediaItems: MediaItem[];              // Array of images to display
+  onActiveIndexChange?: (index: number) => void;  // Callback when slide changes
+  showTopProgressBar?: boolean;         // Control top progress bar visibility
 };
 
 // --- CSS-Native Carousel Component ---
+// This carousel uses cutting-edge CSS features instead of JavaScript for scrolling
 const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({ 
   mediaItems, 
-  onActiveIndexChange, 
-  isFirstCarousel = false
+  onActiveIndexChange,
+  showTopProgressBar = true
 }, ref) => {
-  const { setCurrentSlide: setContextSlide, setTotalSlides } = useCarousel();
+  // Connect to the global carousel context (used by other components)
+  const { setCurrentSlide: setContextSlide, setTotalSlides, isSafari, supportsScrollState } = useCarousel();
+  
+  // Ref handling: support both forwarded refs and internal refs
   const internalRef = useRef<HTMLDivElement>(null);
   const carouselRef = (ref && typeof ref === 'object') ? ref : internalRef;
+  
+  // Track which slide is currently active (for progress bar and chevron visibility)
   const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // Track if we're on the blur slide (for Safari fallback)
+  const [isOnBlurSlide, setIsOnBlurSlide] = useState(false);
+  
+  
+  // CSS Variables reader - allows JS to access CSS scroll-state information
+  const [, setCssScrollState] = useState({
+    isScrollableRight: false,
+    isScrollableLeft: false,
+    transparentSlideActive: false,
+    blurSlideActive: false
+  });
 
-  // Initialize carousel and set up any necessary JavaScript
+  // Browser detection passed from parent (detected in HTML head)
+
+  // Set up JavaScript listeners (even though most logic is CSS-native)
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
 
-    // Listen for scroll events for parent notifications and progress tracking
+    // Listen for scroll events to track which slide is currently active
+    // This is needed for: progress bar, chevron visibility, and parent callbacks
     const handleScroll = () => {
       const scrollLeft = carousel.scrollLeft;
       const containerWidth = carousel.offsetWidth;
@@ -38,22 +62,22 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
       let currentIndex = 0;
       
       if (isDesktop) {
-        // Desktop: Mixed slide widths - calculate based on slide positions
-        // Slides 0 to mediaItems.length-1: 50% width
-        // Transparent slide (mediaItems.length): 100% width  
-        // Blur slide (mediaItems.length+1): 100% width
+        // DESKTOP: Mixed slide widths require complex position calculation
+        // Regular slides: 50% width, Transparent slide: 50% width, Blur slide: 100% width
         
         const halfWidth = containerWidth * 0.5;
         const fullWidth = containerWidth;
         
-        // Calculate cumulative positions
+        // Walk through each slide and calculate its position
         let accumulatedWidth = 0;
-        const totalSlides = mediaItems.length + 2;
+        const totalSlides = mediaItems.length + 2; // +1 transparent, +1 blur
         
         for (let i = 0; i < totalSlides; i++) {
+          // Determine this slide's width (blur slide is full width, others are half)
           const slideWidth = (i >= mediaItems.length) ? fullWidth : halfWidth;
           const slideCenter = accumulatedWidth + (slideWidth / 2);
           
+          // Check if the current scroll position shows this slide as active
           if (scrollLeft + (containerWidth / 2) <= slideCenter + (slideWidth / 4)) {
             currentIndex = i;
             break;
@@ -62,18 +86,28 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           accumulatedWidth += slideWidth;
         }
       } else {
-        // Mobile: All slides same width
-        const slideWidth = containerWidth;
-        currentIndex = Math.round(scrollLeft / slideWidth);
+        // MOBILE/TABLET: Simple slide detection based on scroll position
+        const totalSlides = mediaItems.length + 2; // +1 transparent, +1 blur
+        const maxScroll = carousel.scrollWidth - containerWidth;
+        const scrollPercentage = scrollLeft / maxScroll;
+        
+        // Map scroll percentage to slide index
+        currentIndex = Math.round(scrollPercentage * (totalSlides - 1));
+        currentIndex = Math.max(0, Math.min(currentIndex, totalSlides - 1));
       }
       
-      // Update current slide state for progress bar
+      // Update internal state (used for progress bar and chevron visibility)
       setCurrentSlide(currentIndex);
       
-      // Update carousel context for NavigationHint
+      // Check if we're on the blur slide (for Safari fallback)
+      const totalSlidesCount = mediaItems.length + 2; // +1 transparent, +1 blur
+      const isBlurSlide = currentIndex === totalSlidesCount - 1;
+      setIsOnBlurSlide(isBlurSlide);
+      
+      // Update global carousel context (used by other components like NavigationHint)
       setContextSlide(currentIndex);
       
-      // Only report actual media items to parent, not transparent/blur slides
+      // Notify parent component, but only for actual image slides (not transparent/blur)
       if (onActiveIndexChange && currentIndex < mediaItems.length) {
         onActiveIndexChange(currentIndex);
       }
@@ -83,14 +117,45 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
     return () => carousel.removeEventListener('scroll', handleScroll);
   }, [mediaItems.length, onActiveIndexChange, setContextSlide]);
 
-  // Initialize carousel context
+  // Read CSS variables to sync CSS scroll-state with JavaScript (Skip on Safari)
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel || isSafari) return; // Skip CSS variable reading on Safari
+
+    const readCssVariables = () => {
+      const computedStyle = getComputedStyle(carousel);
+      
+      const newState = {
+        isScrollableRight: computedStyle.getPropertyValue('--is-scrollable-right').trim() === '1',
+        isScrollableLeft: computedStyle.getPropertyValue('--is-scrollable-left').trim() === '1',
+        transparentSlideActive: computedStyle.getPropertyValue('--transparent-slide-is-active').trim() === '1',
+        blurSlideActive: computedStyle.getPropertyValue('--blur-slide-is-active').trim() === '1'
+      };
+      
+      setCssScrollState(newState);
+    };
+
+    // Read on scroll and resize
+    carousel.addEventListener('scroll', readCssVariables, { passive: true });
+    window.addEventListener('resize', readCssVariables);
+    
+    // Initial read
+    readCssVariables();
+
+    return () => {
+      carousel.removeEventListener('scroll', readCssVariables);
+      window.removeEventListener('resize', readCssVariables);
+    };
+  }, [isSafari, supportsScrollState, currentSlide, mediaItems.length]);
+
+  // Set up the global carousel context when component mounts
   useEffect(() => {
     const totalSlides = mediaItems.length + 2; // +1 for transparent, +1 for blur
     setTotalSlides(totalSlides);
-    setContextSlide(0);
+    setContextSlide(0); // Start at first slide
   }, [mediaItems.length, setTotalSlides, setContextSlide]);
 
-  // Handle window resize to recalculate slide positions
+  // Handle window resizing (desktop ↔ mobile changes slide width calculations)
   useEffect(() => {
     const handleResize = () => {
       const carousel = carouselRef.current;
@@ -121,11 +186,23 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           accumulatedWidth += slideWidth;
         }
       } else {
-        const slideWidth = containerWidth;
-        currentIndex = Math.round(scrollLeft / slideWidth);
+        // MOBILE/TABLET: Simple slide detection based on scroll position
+        const totalSlides = mediaItems.length + 2; // +1 transparent, +1 blur
+        const maxScroll = carousel.scrollWidth - containerWidth;
+        const scrollPercentage = scrollLeft / maxScroll;
+        
+        // Map scroll percentage to slide index
+        currentIndex = Math.round(scrollPercentage * (totalSlides - 1));
+        currentIndex = Math.max(0, Math.min(currentIndex, totalSlides - 1));
       }
       
       setCurrentSlide(currentIndex);
+      
+      // Check if we're on the blur slide (for Safari fallback)
+      const totalSlidesCount = mediaItems.length + 2; // +1 transparent, +1 blur
+      const isBlurSlide = currentIndex === totalSlidesCount - 1;
+      setIsOnBlurSlide(isBlurSlide);
+      
       setContextSlide(currentIndex);
     };
 
@@ -133,7 +210,8 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
     return () => window.removeEventListener('resize', handleResize);
   }, [setContextSlide, mediaItems.length]);
 
-  // Handle next section navigation
+
+  // Click handler for the blur slide - scrolls to next section of the website
   const scrollToNextSection = () => {
     const main = document.querySelector('main');
     if (main) {
@@ -141,34 +219,32 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
     }
   };
 
-  // Early return for empty carousel
-  if (mediaItems.length === 0) {
-    return (
-      <div className="relative h-full w-full flex items-center justify-center text-white bg-black">
-        <p>No images to display.</p>
-      </div>
-    );
-  }
 
+  // Get the last image for use as background and transparent slide
   const lastImage = mediaItems[mediaItems.length - 1];
   
-  // Generate CSS classes for this carousel
+  // Build CSS class list based on carousel features
   const carouselClasses = [
-    'css-carousel',
-    isFirstCarousel && 'css-carousel--first',
-    mediaItems.length > 1 && 'css-carousel--with-progress'
+    'css-carousel',                                           // Base carousel styles
+    mediaItems.length > 1 && 'css-carousel--with-progress'   // Multiple images get progress bar
   ].filter(Boolean).join(' ');
 
   return (
     <>
-      {/* CSS Styles - will be moved to CSS file later */}
+      {/* 
+        INLINE CSS STYLES - EXPERIMENTAL
+        These styles use cutting-edge CSS features that aren't widely supported yet.
+        They will be moved to a separate CSS file once the features become stable.
+      */}
       <style>{`
-        /* Base carousel styles */
+        /* 
+          BASE CAROUSEL CONTAINER
+          Uses CSS scroll-snap for native scrolling behavior
+        */
         .css-carousel {
           position: relative;
           height: 100%;
           width: 100%;
-          background-image: url(${lastImage.src});
           background-size: cover;
           background-position: center;
           font-family: sans-serif;
@@ -225,19 +301,45 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           
           /* Enable scroll-state queries on each slide */
           container-type: scroll-state;
+          
+          /* Default: slide is not active */
+          --slide-is-active: 0;
+          --slide-is-transparent: 0;
+          --slide-is-blur: 0;
+        }
+        
+        /* CSS Variables: Communicate scroll-state to parent elements */
+        .css-carousel {
+          /* Default carousel state variables */
+          --current-slide-is-active: 0;
+          --transparent-slide-is-active: 0;
+          --blur-slide-is-active: 0;
+          --is-scrollable-right: 0;
+          --is-scrollable-left: 0;
+        }
+        
+        /* Update carousel variables when scrollable states change */
+        .css-carousel {
+          @container scroll-state(scrollable: right) {
+            --is-scrollable-right: 1;
+          }
+          
+          @container scroll-state(scrollable: left) {
+            --is-scrollable-left: 1;
+          }
         }
         
         /* Desktop: Half-width slides */
         @media (min-width: 1024px) {
           .css-carousel__slide {
-            min-width: 50%;
-            width: 50%;
+            min-width: 50vw;
+            width: 50vw;
           }
           
           /* Only blur slide full-width */
           .css-carousel__slide--blur {
-            min-width: 100% !important;
-            width: 100% !important;
+            min-width: 100vw !important;
+            width: 100vw !important;
           }
         }
         
@@ -250,6 +352,27 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
         .css-carousel__slide--transparent {
           background: transparent;
           z-index: 15;
+          
+          /* Update parent carousel variables when this slide is active */
+          @container scroll-state(snapped: x) {
+            --slide-is-active: 1;
+            --slide-is-transparent: 1;
+          }
+        }
+        
+        /* Pass transparent slide state to carousel */
+        .css-carousel:has(.css-carousel__slide--transparent[--slide-is-active="1"]) {
+          --transparent-slide-is-active: 1;
+        }
+        
+        /* Mobile/Tablet: Make transparent slide completely transparent */
+        @media (max-width: 1023px) {
+          .css-carousel__slide--transparent {
+            opacity: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+          }
         }
         
         /* Desktop: Show last image on transparent slide */
@@ -264,6 +387,17 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
         .css-carousel__slide--blur {
           background: transparent;
           z-index: 15;
+          
+          /* Update parent carousel variables when this slide is active */
+          @container scroll-state(snapped: x) {
+            --slide-is-active: 1;
+            --slide-is-blur: 1;
+          }
+        }
+        
+        /* Pass blur slide state to carousel */
+        .css-carousel:has(.css-carousel__slide--blur[--slide-is-active="1"]) {
+          --blur-slide-is-active: 1;
         }
         
         .css-carousel__slide--blur > .blur-overlay {
@@ -286,6 +420,15 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           backdrop-filter: blur(0px);
           -webkit-backdrop-filter: blur(0px);
           transition: all 0.15s ease-out;
+          z-index: 1;
+        }
+        
+        /* Mobile/Tablet fallback: Apply blur effect via JavaScript state for all browsers below 1024px */
+        .css-carousel__slide--blur > .blur-overlay > .black-blur-div.mobile-blur-active {
+          background: rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          transition: all 0.5s ease-out 0.1s;
         }
         
         .css-carousel__slide--blur > .blur-overlay {
@@ -317,91 +460,78 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           }
         }
         
-        /* Navigation buttons using ::scroll-button() */
-        .css-carousel--first::scroll-button(right) {
-          content: '' / 'Next slide';
-          position: fixed;
-          position-anchor: --css-carousel;
-          position-area: inline-end center;
+        /* CSS Chevron Right Button with scroll-state queries */
+        .css-carousel::scroll-button(right) {
+          content: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9,18 15,12 9,6'/%3E%3C/svg%3E") / 'Next slide';
+          position: absolute;
+          right: 24px;
+          top: 50%;
+          transform: translateY(-50%);
           
-          background: red; /* Temporary: make it visible for debugging */
-          border: 2px solid yellow; /* Temporary: debugging border */
-          width: 50px; /* Temporary: larger for visibility */
-          height: 50px; /* Temporary: larger for visibility */
+          background: none;
+          border: none;
           cursor: pointer;
           
-          /* Add chevron-right icon using pseudo-element content */
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9,18 15,12 9,6'%3E%3C/polyline%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: contain;
-          
-          filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
-          
-          opacity: 1;
-          transition: opacity 0.15s ease;
-          z-index: 100;
-        }
-        
-        /* Fallback for browsers without scroll-button support */
-        @supports not (selector(::scroll-button(right))) {
-          .css-carousel--first::after {
-            content: '→';
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            
-            background: red;
-            border: 2px solid yellow;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 100;
-          }
-        }
-        
-        /* Progress markers using ::scroll-marker() - COMMENTED OUT */
-        /*
-        .css-carousel--with-progress {
-          scroll-marker-group: after;
-        }
-        
-        .css-carousel--with-progress::scroll-marker-group {
-          position: fixed;
-          position-anchor: --css-carousel;
-          position-area: block-end;
-          margin: 20px;
-          
-          display: flex;
-          gap: 8px;
-          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.15s ease-in-out;
           z-index: 30;
         }
         
-        .css-carousel__slide::scroll-marker {
-          content: '';
-          width: 40px;
-          height: 2px;
-          background: rgba(255, 255, 255, 0.3);
-          transition: background 0.3s ease;
-          border-radius: 1px;
+        /* Safari CSS Chevron Right Button - Uses native scroll behavior */
+        .css-carousel__safari-chevron-right {
+          position: absolute;
+          right: 24px;
+          top: 50%;
+          transform: translateY(-50%);
+          
+          background: none;
+          border: none;
+          cursor: pointer;
+          
+          opacity: 0;
+          transition: opacity 0.15s ease-in-out;
+          z-index: 30;
+          
+          /* Use CSS scroll behavior instead of JavaScript */
+          scroll-behavior: smooth;
         }
         
-        .css-carousel__slide::scroll-marker:target-current {
-          background: white;
+        .css-carousel__safari-chevron-right:hover {
+          opacity: 0.7;
         }
-        */
         
-        /* Scroll-state queries for component communication */
-        
-        /* Chevron is now always visible - no conditional logic needed */
+        /* Show chevron when scrollable to right, hide on transparent/blur slides */
+        @media (min-width: 1024px) {
+          @supports (container-type: scroll-state) {
+            .css-carousel {
+              @container scroll-state(scrollable: right) {
+                &::scroll-button(right) {
+                  opacity: 1;
+                }
+              }
+            }
+            
+            /* Hide chevron when transparent slide is snapped */
+            .css-carousel__slide--transparent {
+              @container scroll-state(snapped: x) {
+                + * {
+                  .css-carousel::scroll-button(right) {
+                    opacity: 0 !important;
+                  }
+                }
+              }
+            }
+            
+            /* Hide chevron when blur slide is snapped */
+            .css-carousel__slide--blur {
+              @container scroll-state(snapped: x) {
+                .css-carousel::scroll-button(right) {
+                  opacity: 0 !important;
+                }
+              }
+            }
+          }
+        }
         
         /* Blur slide activation when snapped - moved to child element */
         
@@ -432,26 +562,7 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           }
         }
         
-        /* Feature detection fallback */
-        @supports not (container-type: scroll-state) {
-          .css-carousel--fallback-notice {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 4px;
-            z-index: 1000;
-            font-size: 12px;
-          }
-        }
         
-        @supports not (scroll-marker-group: after) {
-          .css-carousel--with-progress::scroll-marker-group {
-            display: none;
-          }
-        }
         
         /* Progress bar fade animations */
         @keyframes fadeIn {
@@ -475,7 +586,9 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
         } else if (ref && 'current' in ref) {
           ref.current = el;
         }
-      }} data-carousel="css-native">
+      }} data-carousel="css-native" style={{
+        backgroundImage: `url(${lastImage.src})`
+      }}>
         {/* Background image for blur effect */}
         <div
           className="css-carousel__background"
@@ -484,9 +597,15 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           }}
         />
 
-        {/* Carousel container */}
+        {/* 
+          CAROUSEL SLIDES CONTAINER
+          Contains all the individual slides in a horizontal flex layout
+        */}
         <div className="css-carousel__container">
-          {/* Regular image slides (all except last) */}
+          {/* 
+            REGULAR IMAGE SLIDES
+            Shows all images except the last one (which is used for transparent slide)
+          */}
           {mediaItems.slice(0, -1).map((item, idx) => (
             <div
               key={`${item.src}-${idx}`}
@@ -500,7 +619,11 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
             />
           ))}
 
-          {/* Transparent slide (shows background) */}
+          {/* 
+            TRANSPARENT SLIDE 
+            Shows the last image on desktop, fully transparent on mobile/tablet
+            This creates a smooth transition before the blur effect
+          */}
           <div
             className="css-carousel__slide css-carousel__slide--transparent"
             role="group"
@@ -511,7 +634,11 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
             }}
           />
 
-          {/* Blur overlay slide */}
+          {/* 
+            BLUR SLIDE 
+            Final slide with blur effect that leads to next section
+            Clicking it scrolls to the next section of the website
+          */}
           <div
             className="css-carousel__slide css-carousel__slide--blur"
             role="group"
@@ -521,35 +648,32 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
             style={{ cursor: 'pointer' }}
           >
             <div className="blur-overlay">
-              <div className="black-blur-div" />
-              {/* Down Chevron inside blur overlay */}
-              <div
-                className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
-              >
-                <div 
-                  className="text-white drop-shadow-2xl w-6 h-6"
-                  dangerouslySetInnerHTML={{ 
-                    __html: feather.icons['chevron-down'].toSvg({ 
-                      width: window.innerWidth >= 768 ? 28 : 24, 
-                      height: window.innerWidth >= 768 ? 28 : 24, 
-                      color: 'white' 
-                    }) 
-                  }} 
-                />
-              </div>
+              <div className={`black-blur-div ${window.innerWidth < 1024 && isOnBlurSlide ? 'mobile-blur-active' : ''}`} />
+            </div>
+            {/* Down Chevron - moved outside blur overlay */}
+            <div
+              className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50 cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
+            >
+              <ChevronDown 
+                width={window.innerWidth >= 768 ? 28 : 24}
+                height={window.innerWidth >= 768 ? 28 : 24}
+                color="white"
+                className="drop-shadow-2xl"
+              />
             </div>
           </div>
         </div>
 
 
-        {/* Feature detection notice (only shows if CSS features not supported) */}
-        <div className="css-carousel--fallback-notice">
-          CSS Carousel (Fallback to React if unsupported)
-        </div>
 
       </div>
 
-      {/* JavaScript Progress Bar Fallback - Outside carousel container */}
+      {/* 
+        PROGRESS BAR (BOTTOM)
+        Shows carousel progress as a horizontal line at the bottom
+        Only visible on slides 1 through last image slide (not on first, transparent, or blur slides)
+        Uses strictly JavaScript currentSlide detection for all browsers
+      */}
       {mediaItems.length > 1 && currentSlide > 0 && currentSlide < mediaItems.length && (
         <div 
           className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-full md:w-4/5 px-6 md:px-0"
@@ -567,6 +691,64 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
           </div>
         </div>
       )}
+
+      {/* 
+        PROGRESS BAR (TOP) - Mobile/Tablet Only
+        Shows carousel progress as a horizontal line at the top
+        Only visible on devices below 1024px and when showTopProgressBar is true
+        Same visibility logic as bottom progress bar
+      */}
+      {showTopProgressBar && mediaItems.length > 1 && currentSlide > 0 && currentSlide < mediaItems.length && (
+        <div 
+          className="absolute top-5 left-1/2 -translate-x-1/2 z-20 w-full px-6 lg:hidden"
+          style={{
+            animation: 'fadeIn 0.15s ease-in-out'
+          }}
+        >
+          <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
+            <div
+              className="h-full bg-gray-50 transition-all duration-500 ease-in-out"
+              style={{
+                width: `${mediaItems.length > 1 ? (currentSlide / (mediaItems.length - 1)) * 100 : 0}%`
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Safari CSS Chevron Right Button - JavaScript visibility, CSS scrolling - Desktop only */}
+      {isSafari && window.innerWidth >= 1024 && mediaItems.length > 1 && currentSlide < mediaItems.length - 1 && (
+        <button 
+          className="css-carousel__safari-chevron-right"
+          style={{ opacity: 1 }}
+          aria-label="Next slide"
+          onClick={(e) => {
+            e.preventDefault();
+            const carousel = carouselRef.current;
+            if (!carousel) return;
+            
+            // Get the next slide element and scroll to it using CSS scroll-snap
+            const slides = carousel.querySelectorAll('.css-carousel__slide');
+            const nextSlide = slides[currentSlide + 1];
+            if (nextSlide) {
+              nextSlide.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest', 
+                inline: 'center' 
+              });
+            }
+          }}
+        >
+          <ChevronRight 
+            width={28}
+            height={28}
+            color="white"
+            className="drop-shadow-2xl pointer-events-none"
+          />
+        </button>
+      )}
+
+      {/* CSS chevron button handled above in ::scroll-button() for non-Safari browsers */}
 
     </>
   );

@@ -22,11 +22,19 @@ main {
   /* Ensure smooth and mandatory scroll snap behavior */
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  
+  /* Hide vertical scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+main::-webkit-scrollbar {
+  display: none;
 }
 
 /* Ensure sections snap properly */
 section {
-  scroll-snap-align: start;
+  scroll-snap-align: center;
   scroll-snap-stop: always;
 }
 
@@ -66,10 +74,4 @@ html, body {
 #root {
   height: 100vh;
   width: 100%;
-}
-
-/* Blur effect for slide */
-.blur-slide {
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
 }

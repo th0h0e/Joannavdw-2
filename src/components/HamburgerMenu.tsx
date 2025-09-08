@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ProjectNavigation from './ProjectNavigation';
 
 type HamburgerMenuProps = {
   projectTitles: string[];
+  isPopupVisible?: boolean;
 };
 
-export default function HamburgerMenu({ projectTitles }: HamburgerMenuProps) {
+export default function HamburgerMenu({ projectTitles, isPopupVisible = false }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
+    // Don't allow opening menu when popups are visible
+    if (isPopupVisible) return;
     setIsOpen(!isOpen);
   };
 
@@ -19,25 +23,27 @@ export default function HamburgerMenu({ projectTitles }: HamburgerMenuProps) {
   return (
     <>
       {/* Hamburger Button */}
-      <button
-        onClick={toggleMenu}
-        className="fixed top-5 right-5 md:top-[89px] md:right-[40px] z-[10000] cursor-pointer"
-        aria-label="Toggle menu"
-      >
-        <motion.div
-          className="block"
-          style={{ 
-            width: '18px',
-            height: '18px',
-            mixBlendMode: isOpen ? 'normal' : 'exclusion'
-          }}
-          animate={{
-            rotate: isOpen ? 45 : 0,
-            backgroundColor: isOpen ? '#000000' : '#ffffff',
-          }}
-          transition={{ duration: 0.3 }}
-        />
-      </button>
+      {!isPopupVisible && (
+        <button
+          onClick={toggleMenu}
+          className="fixed top-[80px] right-5 md:top-[89px] md:right-[40px] z-[10000] cursor-pointer"
+          aria-label="Toggle menu"
+        >
+          <motion.div
+            className="block md:w-[18px] md:h-[18px]"
+            style={{ 
+              mixBlendMode: isOpen ? 'normal' : 'exclusion'
+            }}
+            animate={{
+              rotate: isOpen ? 45 : 0,
+              backgroundColor: isOpen ? '#000000' : '#ffffff',
+              width: isOpen ? '18px' : (window.innerWidth >= 768 ? '18px' : '17.32px'),
+              height: isOpen ? '18px' : (window.innerWidth >= 768 ? '18px' : '17.32px'),
+            }}
+            transition={{ duration: 0.3 }}
+          />
+        </button>
+      )}
 
       {/* Menu Overlay */}
       <AnimatePresence>
@@ -61,46 +67,29 @@ export default function HamburgerMenu({ projectTitles }: HamburgerMenuProps) {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <div className="w-full h-full overflow-y-auto">
-                {/* Modified ProjectIndex for menu */}
-                <div className="min-h-full flex items-center justify-center py-20">
-                  <div className="w-full md:w-4/5 text-center px-6 md:px-0">
-                    <ul className="space-y-2">
-                      {projectTitles.map((title, index) => (
-                        <li key={index}>
-                          <a 
-                            href={`#project-${index}`}
-                            className="text-black text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl uppercase leading-none block no-underline hover:underline transition-all duration-200"
-                            style={{ 
-                              fontFamily: 'EnduroWeb, sans-serif',
-                              letterSpacing: '0.03em'
-                            }}
-                            onClick={(e) => {
-                              e.preventDefault(); // Prevent immediate navigation
-                              closeMenu();
-                              
-                              // Navigate after menu closes to avoid state conflicts
-                              setTimeout(() => {
-                                window.location.hash = `#project-${index}`;
-                                
-                                // Reset all carousels to first slide after navigation
-                                setTimeout(() => {
-                                  const carousels = document.querySelectorAll('[data-carousel]');
-                                  carousels.forEach(carousel => {
-                                    if (carousel instanceof HTMLElement) {
-                                      carousel.scrollLeft = 0;
-                                    }
-                                  });
-                                }, 100);
-                              }, 300); // Wait for menu close animation
-                            }}
-                          >
-                            {title}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+              <div className="w-full h-dvh overflow-y-auto">
+                <div className="min-h-dvh flex items-center justify-center py-20">
+                  <ProjectNavigation 
+                    projectTitles={projectTitles}
+                    onLinkClick={(index) => {
+                      closeMenu();
+                      
+                      // Navigate after menu closes to avoid state conflicts
+                      setTimeout(() => {
+                        window.location.hash = `#project-${index}`;
+                        
+                        // Reset all carousels to first slide after navigation
+                        setTimeout(() => {
+                          const carousels = document.querySelectorAll('[data-carousel]');
+                          carousels.forEach(carousel => {
+                            if (carousel instanceof HTMLElement) {
+                              carousel.scrollLeft = 0;
+                            }
+                          });
+                        }, 100);
+                      }, 300); // Wait for menu close animation
+                    }}
+                  />
                 </div>
               </div>
             </motion.div>

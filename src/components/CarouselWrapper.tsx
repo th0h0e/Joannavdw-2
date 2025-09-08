@@ -1,122 +1,59 @@
-import { useState, useEffect, useRef } from 'react';
-import SwipeCarousel from './SwipeCarousel';
+import { useRef } from 'react';
 import CSSCarousel from './CSSCarousel';
 import CSSProjectTitle from './CSSProjectTitle';
 
 // --- Type Definitions ---
+// Simple image object with just a source URL
 type MediaItem = {
   src: string;
 };
 
+// Props that the wrapper accepts from parent components
 type CarouselWrapperProps = {
-  mediaItems: MediaItem[];
-  onActiveIndexChange?: (index: number) => void;
-  isFirstCarousel?: boolean;
-  forceCSSCarousel?: boolean; // For testing purposes
-  projectTitle?: string;
-  onNextSection?: () => void;
-  onShowPopup?: (title: string) => void;
-  isPopupVisible?: boolean;
-  isAboutPopupVisible?: boolean;
+  mediaItems: MediaItem[];              // Array of images to display
+  projectTitle?: string;                // Title displayed over carousel
+  onNextSection?: () => void;           // What happens when "next section" is clicked
+  onShowPopup?: (title: string) => void;  // Show project popup
+  isPopupVisible?: boolean;             // Is project popup currently visible?
+  isAboutPopupVisible?: boolean;        // Is about popup currently visible?
+  showTopProgressBar?: boolean;         // Control top progress bar visibility
 };
 
-// --- Feature Detection ---
-function supportsCSSCarousel(): boolean {
-  if (typeof window === 'undefined') return false;
-  
-  try {
-    // Check for scroll-state() support
-    const supportsScrollState = CSS.supports('container-type', 'scroll-state');
-    
-    // Check for scroll-marker support
-    const supportsScrollMarker = CSS.supports('scroll-marker-group', 'after');
-    
-    // Check for scroll-button support (this might not be detectable yet)
-    // For now, we'll assume it comes with scroll-state support
-    
-    return supportsScrollState && supportsScrollMarker;
-  } catch (e) {
-    return false;
-  }
-}
 
 // --- Carousel Wrapper Component ---
+// Wrapper that adds project title overlay to the CSS carousel
 export default function CarouselWrapper({ 
   mediaItems, 
-  onActiveIndexChange, 
-  isFirstCarousel = false,
-  forceCSSCarousel = false,
   projectTitle,
   onNextSection,
   onShowPopup,
   isPopupVisible = false,
-  isAboutPopupVisible = false
+  isAboutPopupVisible = false,
+  showTopProgressBar = true
 }: CarouselWrapperProps) {
-  const [useCSSCarousel, setUseCSSCarousel] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  // Reference to the carousel DOM element (needed for CSSProjectTitle)
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setIsClient(true);
-    
-    // Feature detection
-    const cssSupported = supportsCSSCarousel();
-    
-    // For testing: allow forcing CSS carousel even without support
-    setUseCSSCarousel(forceCSSCarousel || cssSupported);
-    
-    // Debug logging
-    console.log('CSS Carousel Support:', {
-      scrollState: CSS.supports('container-type', 'scroll-state'),
-      scrollMarker: CSS.supports('scroll-marker-group', 'after'),
-      willUseCSSCarousel: forceCSSCarousel || cssSupported
-    });
-  }, [forceCSSCarousel]);
-
-  // Server-side rendering fallback
-  if (!isClient) {
-    return (
-      <SwipeCarousel 
-        mediaItems={mediaItems}
-        onActiveIndexChange={onActiveIndexChange}
-        isFirstCarousel={isFirstCarousel}
-      />
-    );
-  }
-
-  // Choose implementation
-  if (useCSSCarousel) {
-    return (
-      <div className="relative h-full w-full">
-        <CSSCarousel 
-          ref={carouselRef}
-          mediaItems={mediaItems}
-          onActiveIndexChange={onActiveIndexChange}
-          isFirstCarousel={isFirstCarousel}
-        />
-        {projectTitle && (
-          <CSSProjectTitle 
-            title={projectTitle}
-            carouselRef={carouselRef}
-            mediaItems={mediaItems}
-            onNextSection={onNextSection}
-            onShowPopup={onShowPopup}
-            isPopupVisible={isPopupVisible}
-            isAboutPopupVisible={isAboutPopupVisible}
-          />
-        )}
-      </div>
-    );
-  }
-
   return (
-    <SwipeCarousel 
-      mediaItems={mediaItems}
-      onActiveIndexChange={onActiveIndexChange}
-      isFirstCarousel={isFirstCarousel}
-    />
+    <div className="relative h-full w-full">
+      {/* CSS-native carousel with modern scroll-state features */}
+      <CSSCarousel 
+        ref={carouselRef}
+        mediaItems={mediaItems}
+        showTopProgressBar={showTopProgressBar}
+      />
+      {/* Project title overlay */}
+      {projectTitle && (
+        <CSSProjectTitle 
+          title={projectTitle}
+          carouselRef={carouselRef}
+          mediaItems={mediaItems}
+          onNextSection={onNextSection}
+          onShowPopup={onShowPopup}
+          isPopupVisible={isPopupVisible}
+          isAboutPopupVisible={isAboutPopupVisible}
+        />
+      )}
+    </div>
   );
 }
-
-// --- Export feature detection for external use ---
-export { supportsCSSCarousel };

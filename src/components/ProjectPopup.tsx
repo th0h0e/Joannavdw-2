@@ -6,9 +6,10 @@ type ProjectPopupProps = {
   onClose: () => void;
   projectTitle: string;
   projectDescription: string;
+  projectResponsibility: string[];
 };
 
-export default function ProjectPopup({ isVisible, onClose, projectTitle, projectDescription }: ProjectPopupProps) {
+export default function ProjectPopup({ isVisible, onClose, projectTitle, projectDescription, projectResponsibility }: ProjectPopupProps) {
   return (
     <AnimatePresence>
       {isVisible && (
@@ -72,9 +73,12 @@ export default function ProjectPopup({ isVisible, onClose, projectTitle, project
                     marginBottom: '18px'
                   }}
                 >
-                  ARTIST HANDLING<br/>
-                  CREATIVE PRODUCTION<br/>
-                  CONCEPT MANAGEMENT
+                  {projectResponsibility.map((responsibility, index) => (
+                    <span key={index}>
+                      {responsibility}
+                      {index < projectResponsibility.length - 1 && <br/>}
+                    </span>
+                  ))}
                 </div>
                 <p 
                   className="text-black text-center leading-tight"

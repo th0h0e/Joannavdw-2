@@ -2,13 +2,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProjectCardSVG from '../assets/Project Card/JVDW WEB LIGHT BOX copy.svg';
 import Asset7Logo from '../assets/logo svg/Asset 7.svg';
 import Asset11Logo from '../assets/logo svg/Asset 11.svg';
+import type { About } from '../config/pocketbase';
 
 type AboutPopupProps = {
   isVisible: boolean;
   onClose: () => void;
+  aboutData: About | null;
 };
 
-export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
+export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopupProps) {
   return (
     <AnimatePresence>
       {isVisible && (
@@ -76,7 +78,7 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                       marginBottom: '18px'
                     }}
                   >
-                    Story Driven Strategy
+                    {aboutData?.Portfolio_Title || 'Story Driven Strategy'}
                   </h2>
                 <p 
                   className="text-black text-center leading-tight"
@@ -87,7 +89,7 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                     marginBottom: '18px'
                   }}
                 >
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis ipsum vel nulla blandit, eu porta ligula mattis. Phasellus mattis rutrum elit, sed cursus risus tempus quis. Mauris sed ante et lectus consectetur aliquet. Sed in orci a metus aliquam porttitor.
+                  {aboutData?.About_Description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis ipsum vel nulla blandit, eu porta ligula mattis. Phasellus mattis rutrum elit, sed cursus risus tempus quis. Mauris sed ante et lectus consectetur aliquet. Sed in orci a metus aliquam porttitor.'}
                 </p>
                 
                 <h3 
@@ -99,7 +101,7 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                     marginBottom: '18px'
                   }}
                 >
-                  Expertise
+                  {aboutData?.Expertise_Title || 'Expertise'}
                 </h3>
                 <p 
                   className="text-black text-center leading-tight"
@@ -110,7 +112,7 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                     marginBottom: '18px'
                   }}
                 >
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis ipsum vel nulla blandit.
+                  {aboutData?.Expertise_Description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis ipsum vel nulla blandit.'}
                 </p>
                 
                 <h3 
@@ -122,7 +124,7 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                     marginBottom: '18px'
                   }}
                 >
-                  Selected Clients
+                  {aboutData?.Selected_Clients_Title || 'Selected Clients'}
                 </h3>
                 <p 
                   className="text-black text-center leading-tight"
@@ -133,7 +135,7 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                     marginBottom: '18px'
                   }}
                 >
-                  Ipsum, Dolor, Sit Amet, Consectetur, Adipiscing, Aenean, Mattis, Blandit.
+                  {aboutData?.Client_List ? aboutData.Client_List.join(', ') : 'Ipsum, Dolor, Sit Amet, Consectetur, Adipiscing, Aenean, Mattis, Blandit.'}
                 </p>
                 
                 <button 
@@ -148,11 +150,11 @@ export default function AboutPopup({ isVisible, onClose }: AboutPopupProps) {
                     width: '100%'
                   }}
                   onClick={() => {
-                    // You can add email link or contact functionality here
-                    window.location.href = 'mailto:hello@joannavanderwerf.com';
+                    const email = aboutData?.Contact_Email || 'hello@joannavanderwerf.com';
+                    window.location.href = `mailto:${email}`;
                   }}
                 >
-                  Get in touch
+                  {aboutData?.Contact_Message || 'Get in touch'}
                 </button>
                 </div>
                 

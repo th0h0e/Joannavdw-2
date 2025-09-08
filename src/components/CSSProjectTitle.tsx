@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { projectTitleClasses, projectTitleStyle, projectTitleContainerClasses } from '../utils/sharedStyles';
 
 type CSSProjectTitleProps = {
   title: string;
@@ -58,9 +59,14 @@ export default function CSSProjectTitle({
           accumulatedWidth += slideWidth;
         }
       } else {
-        // Mobile: All slides same width
-        const slideWidth = containerWidth;
-        currentIndex = Math.round(scrollLeft / slideWidth);
+        // Mobile/Tablet: Simple slide detection based on scroll position
+        const totalSlides = mediaItems.length + 2; // +1 transparent, +1 blur
+        const maxScroll = carousel.scrollWidth - containerWidth;
+        const scrollPercentage = scrollLeft / maxScroll;
+        
+        // Map scroll percentage to slide index
+        currentIndex = Math.round(scrollPercentage * (totalSlides - 1));
+        currentIndex = Math.max(0, Math.min(currentIndex, totalSlides - 1));
       }
       
       const totalSlides = mediaItems.length + 2; // +1 for transparent, +1 for blur
@@ -89,24 +95,22 @@ export default function CSSProjectTitle({
           left: 50%;
           transform: translate(-50%, -50%);
           width: 100%;
-          max-width: 80%;
           z-index: 200;
           pointer-events: none;
+        }
+        
+        /* Desktop: Use 80% width to match navigation */
+        @media (min-width: 768px) {
+          .css-project-title {
+            width: 80%;
+          }
         }
         
         .css-project-title__content {
           pointer-events: auto;
           text-align: center;
           color: white;
-          padding: 12px 24px;
           cursor: pointer;
-          
-          /* Typography matching existing ProjectTitle */
-          font-family: 'EnduroWeb', sans-serif;
-          letter-spacing: 0.03em;
-          font-size: clamp(1.25rem, 4vw, 3rem);
-          line-height: 1;
-          text-transform: uppercase;
           
           transition: opacity 0.3s ease-in-out;
         }
@@ -118,9 +122,10 @@ export default function CSSProjectTitle({
       
       <div className="css-project-title">
         <div 
-          className="css-project-title__content"
+          className={`css-project-title__content ${projectTitleClasses} ${projectTitleContainerClasses}`}
           onClick={handleClick}
           style={{
+            ...projectTitleStyle,
             opacity: isPopupVisible || isAboutPopupVisible ? 0 : 1,
             visibility: isPopupVisible || isAboutPopupVisible ? 'hidden' : 'visible',
             transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out'
