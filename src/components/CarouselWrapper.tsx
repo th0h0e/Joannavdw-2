@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import CSSCarousel from './CSSCarousel';
 import CSSProjectTitle from './CSSProjectTitle';
+import type { Settings } from '../config/pocketbase';
 
 // --- Type Definitions ---
 // Simple image object with just a source URL
@@ -17,6 +18,7 @@ type CarouselWrapperProps = {
   isPopupVisible?: boolean;             // Is project popup currently visible?
   isAboutPopupVisible?: boolean;        // Is about popup currently visible?
   showTopProgressBar?: boolean;         // Control top progress bar visibility
+  settingsData?: Settings | null;       // Settings for dynamic font sizing
 };
 
 
@@ -29,7 +31,8 @@ export default function CarouselWrapper({
   onShowPopup,
   isPopupVisible = false,
   isAboutPopupVisible = false,
-  showTopProgressBar = true
+  showTopProgressBar = true,
+  settingsData = null
 }: CarouselWrapperProps) {
   // Reference to the carousel DOM element (needed for CSSProjectTitle)
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -52,6 +55,7 @@ export default function CarouselWrapper({
           onShowPopup={onShowPopup}
           isPopupVisible={isPopupVisible}
           isAboutPopupVisible={isAboutPopupVisible}
+          settingsData={settingsData}
         />
       )}
     </div>

@@ -8,7 +8,7 @@ import LogoTop from './components/LogoTop';
 import LogoBottom from './components/LogoBottom';
 import HamburgerMenu from './components/HamburgerMenu';
 import { CarouselProvider } from './contexts/CarouselContext';
-import pb, { getImageUrl } from './config/pocketbase';
+import pb, { getImageUrl, getCachedData, setCachedData } from './config/pocketbase';
 import type { PortfolioProject, Homepage, About, Settings } from './config/pocketbase';
 
 // --- Import Hero Image (fallback only) ---
@@ -74,6 +74,28 @@ function App() {
       try {
         setLoading(true);
         
+        // Try to get cached data first
+        const cachedProjects = getCachedData<PortfolioProject[]>('Portfolio_Projects');
+        const cachedHomepage = getCachedData<Homepage[]>('Homepage');
+        const cachedAbout = getCachedData<About[]>('About');
+        const cachedSettings = getCachedData<Settings[]>('Settings');
+        
+        // Use cached data if all collections are cached
+        if (cachedProjects && cachedHomepage && cachedAbout && cachedSettings) {
+          if (!isCancelled) {
+            const convertedProjects = cachedProjects.map(convertPocketBaseProject);
+            setProjectsData(convertedProjects);
+            setHomepageData(cachedHomepage[0] || null);
+            setAboutData(cachedAbout[0] || null);
+            setSettingsData(cachedSettings[0] || null);
+            setError(null);
+            setLoading(false);
+          }
+          return;
+        }
+        
+        console.log('Fetching fresh data from PocketBase API...');
+        
         // Fetch all data in parallel
         const [projectsResponse, homepageResponse, aboutResponse, settingsResponse] = await Promise.all([
           pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
@@ -91,6 +113,12 @@ function App() {
             sort: '-created'
           })
         ]);
+        
+        // Cache the fresh data
+        setCachedData('Portfolio_Projects', projectsResponse);
+        setCachedData('Homepage', homepageResponse);
+        setCachedData('About', aboutResponse);
+        setCachedData('Settings', settingsResponse);
         
         // Only update state if the effect wasn't cancelled
         if (!isCancelled) {
@@ -443,6 +471,7 @@ function App() {
       <HamburgerMenu 
         projectTitles={projectTitles}
         isPopupVisible={showPopup || showAboutPopup}
+        settingsData={settingsData}
       />
 
       <main 
@@ -457,7 +486,8 @@ function App() {
       <Hero 
         heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : heroImage} 
         heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
-        isAboutPopupVisible={showAboutPopup} 
+        isAboutPopupVisible={showAboutPopup}
+        settingsData={settingsData}
       />
       
       {/* Project Sections */}
@@ -475,13 +505,14 @@ function App() {
               isPopupVisible={showPopup}
               isAboutPopupVisible={showAboutPopup}
               showTopProgressBar={settingsData?.Show_Top_Progress_Bar ?? true}
+              settingsData={settingsData}
             />
           </CarouselProvider>
         </section>
       ))}
 
       {/* Project Index */}
-      <ProjectIndex projectTitles={projectTitles} />
+      <ProjectIndex projectTitles={projectTitles} settingsData={settingsData} />
 
       </main>
 

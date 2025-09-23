@@ -104,7 +104,7 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
       const isBlurSlide = currentIndex === totalSlidesCount - 1;
       setIsOnBlurSlide(isBlurSlide);
       
-      // Update global carousel context (used by other components like NavigationHint)
+      // Update global carousel context (used by other components)
       setContextSlide(currentIndex);
       
       // Notify parent component, but only for actual image slides (not transparent/blur)
@@ -648,18 +648,19 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
             style={{ cursor: 'pointer' }}
           >
             <div className="blur-overlay">
-              <div className={`black-blur-div ${window.innerWidth < 1024 && isOnBlurSlide ? 'mobile-blur-active' : ''}`} />
-            </div>
-            {/* Down Chevron - moved outside blur overlay */}
-            <div
-              className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50 cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
-            >
-              <ChevronDown 
-                width={window.innerWidth >= 768 ? 28 : 24}
-                height={window.innerWidth >= 768 ? 28 : 24}
-                color="white"
-                className="drop-shadow-2xl"
-              />
+              <div className={`black-blur-div ${window.innerWidth < 1024 && isOnBlurSlide ? 'mobile-blur-active' : ''}`}>
+                {/* Down Chevron - inside blur effect layer */}
+                <div
+                  className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[100] cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
+                >
+                  <ChevronDown 
+                    width={window.innerWidth >= 768 ? 28 : 24}
+                    height={window.innerWidth >= 768 ? 28 : 24}
+                    color="white"
+                    className="drop-shadow-2xl"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -671,10 +672,15 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
       {/* 
         PROGRESS BAR (BOTTOM)
         Shows carousel progress as a horizontal line at the bottom
-        Only visible on slides 1 through last image slide (not on first, transparent, or blur slides)
+        Desktop: Only visible on slides 1 through last image slide (not on first, transparent, or blur slides)
+        Mobile/Tablet: Also visible on transparent slide to prevent progress bar jumping
         Uses strictly JavaScript currentSlide detection for all browsers
       */}
-      {mediaItems.length > 1 && currentSlide > 0 && currentSlide < mediaItems.length && (
+      {mediaItems.length > 1 && currentSlide > 0 && (
+        // Desktop: Hide on transparent slide (currentSlide < mediaItems.length)
+        // Mobile/Tablet: Show on transparent slide (currentSlide <= mediaItems.length)
+        (window.innerWidth >= 1024 ? currentSlide < mediaItems.length : currentSlide <= mediaItems.length)
+      ) && currentSlide < mediaItems.length + 2 && (
         <div 
           className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-full md:w-4/5 px-6 md:px-0"
           style={{
@@ -685,7 +691,9 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
             <div
               className="h-full bg-gray-50 transition-all duration-500 ease-in-out"
               style={{
-                width: `${mediaItems.length > 1 ? (currentSlide / (mediaItems.length - 1)) * 100 : 0}%`
+                width: `${mediaItems.length > 1 ? (currentSlide / (
+                  window.innerWidth >= 1024 ? mediaItems.length - 1 : mediaItems.length
+                )) * 100 : 0}%`
               }}
             />
           </div>
@@ -696,9 +704,9 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
         PROGRESS BAR (TOP) - Mobile/Tablet Only
         Shows carousel progress as a horizontal line at the top
         Only visible on devices below 1024px and when showTopProgressBar is true
-        Same visibility logic as bottom progress bar
+        Mobile/Tablet: Also visible on transparent slide to prevent progress bar jumping
       */}
-      {showTopProgressBar && mediaItems.length > 1 && currentSlide > 0 && currentSlide < mediaItems.length && (
+      {showTopProgressBar && mediaItems.length > 1 && currentSlide > 0 && currentSlide <= mediaItems.length && (
         <div 
           className="absolute top-5 left-1/2 -translate-x-1/2 z-20 w-full px-6 lg:hidden"
           style={{
@@ -709,7 +717,7 @@ const CSSCarousel = forwardRef<HTMLDivElement, CSSCarouselProps>(({
             <div
               className="h-full bg-gray-50 transition-all duration-500 ease-in-out"
               style={{
-                width: `${mediaItems.length > 1 ? (currentSlide / (mediaItems.length - 1)) * 100 : 0}%`
+                width: `${mediaItems.length > 1 ? (currentSlide / mediaItems.length) * 100 : 0}%`
               }}
             />
           </div>

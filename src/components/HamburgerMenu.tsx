@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProjectNavigation from './ProjectNavigation';
+import type { Settings } from '../config/pocketbase';
 
 type HamburgerMenuProps = {
   projectTitles: string[];
   isPopupVisible?: boolean;
+  settingsData?: Settings | null;
 };
 
-export default function HamburgerMenu({ projectTitles, isPopupVisible = false }: HamburgerMenuProps) {
+export default function HamburgerMenu({ projectTitles, isPopupVisible = false, settingsData = null }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -71,6 +73,7 @@ export default function HamburgerMenu({ projectTitles, isPopupVisible = false }:
                 <div className="min-h-dvh flex items-center justify-center py-20">
                   <ProjectNavigation 
                     projectTitles={projectTitles}
+                    settingsData={settingsData}
                     onLinkClick={(index) => {
                       closeMenu();
                       

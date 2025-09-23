@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { projectTitleClasses, projectTitleStyle, projectTitleContainerClasses } from '../utils/sharedStyles';
+import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles';
+import { getResponsiveFontSizes } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase';
 
 type CSSProjectTitleProps = {
   title: string;
@@ -9,6 +11,7 @@ type CSSProjectTitleProps = {
   onShowPopup?: (title: string) => void;
   isPopupVisible?: boolean;
   isAboutPopupVisible?: boolean;
+  settingsData?: Settings | null;
 };
 
 export default function CSSProjectTitle({
@@ -18,9 +21,13 @@ export default function CSSProjectTitle({
   onNextSection,
   onShowPopup,
   isPopupVisible = false,
-  isAboutPopupVisible = false
+  isAboutPopupVisible = false,
+  settingsData = null
 }: CSSProjectTitleProps) {
   const [isOnBlurSlide, setIsOnBlurSlide] = useState(false);
+  
+  // Get dynamic font sizes from settings
+  const fontSizes = getResponsiveFontSizes(settingsData);
   
   // Listen to carousel scroll to detect blur slide
   useEffect(() => {
@@ -113,6 +120,27 @@ export default function CSSProjectTitle({
           cursor: pointer;
           
           transition: opacity 0.3s ease-in-out;
+          
+          /* Dynamic font sizing */
+          font-size: ${fontSizes.mobile}rem;
+        }
+        
+        @media (min-width: 768px) {
+          .css-project-title__content {
+            font-size: ${fontSizes.tablet}rem;
+          }
+        }
+        
+        @media (min-width: 1024px) {
+          .css-project-title__content {
+            font-size: ${fontSizes.desktop}rem;
+          }
+        }
+        
+        @media (min-width: 1280px) {
+          .css-project-title__content {
+            font-size: ${fontSizes.largeDesktop}rem;
+          }
         }
         
         .css-project-title__content:hover {
@@ -125,7 +153,8 @@ export default function CSSProjectTitle({
           className={`css-project-title__content ${projectTitleClasses} ${projectTitleContainerClasses}`}
           onClick={handleClick}
           style={{
-            ...projectTitleStyle,
+            fontFamily: 'EnduroWeb, sans-serif',
+            letterSpacing: '0.03em',
             opacity: isPopupVisible || isAboutPopupVisible ? 0 : 1,
             visibility: isPopupVisible || isAboutPopupVisible ? 'hidden' : 'visible',
             transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out'

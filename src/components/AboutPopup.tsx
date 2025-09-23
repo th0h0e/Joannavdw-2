@@ -15,9 +15,14 @@ export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopup
     <AnimatePresence>
       {isVisible && (
         <>
-          {/* Invisible Backdrop for click-to-close */}
+          {/* Backdrop with blur effect for click-to-close */}
           <motion.div
             className="fixed inset-0 z-40"
+            style={{
+              background: 'rgba(0, 0, 0, 0.3)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

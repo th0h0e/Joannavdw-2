@@ -1,19 +1,44 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import ChevronDown from './icons/ChevronDown';
-import { projectTitleClasses, projectTitleStyle, projectTitleContainerClasses } from '../utils/sharedStyles';
+import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles';
+import { getResponsiveFontSizes } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase';
 
 type HeroProps = {
   heroImage: string;
   heroTitle: string;
   isAboutPopupVisible: boolean;
+  settingsData: Settings | null;
 };
 
-export default function Hero({ heroImage, heroTitle, isAboutPopupVisible }: HeroProps) {
+export default function Hero({ heroImage, heroTitle, isAboutPopupVisible, settingsData }: HeroProps) {
+  const fontSizes = getResponsiveFontSizes(settingsData);
   return (
-    <section 
-      id="hero-section"
-      className="relative h-dvh w-full snap-center bg-white flex items-center justify-center overflow-hidden"
-    >
+    <>
+      <style>{`
+        .hero-title {
+          font-size: ${fontSizes.mobile}rem;
+        }
+        @media (min-width: 768px) {
+          .hero-title {
+            font-size: ${fontSizes.tablet}rem;
+          }
+        }
+        @media (min-width: 1024px) {
+          .hero-title {
+            font-size: ${fontSizes.desktop}rem;
+          }
+        }
+        @media (min-width: 1280px) {
+          .hero-title {
+            font-size: ${fontSizes.largeDesktop}rem;
+          }
+        }
+      `}</style>
+      <section 
+        id="hero-section"
+        className="relative h-dvh w-full snap-center bg-white flex items-center justify-center overflow-hidden"
+      >
       {/* Hero Background Image */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center"
@@ -38,8 +63,11 @@ export default function Hero({ heroImage, heroTitle, isAboutPopupVisible }: Hero
             transition={{ duration: 0.15, delay: 1.2 }}
           >
             <h1 
-              className={`text-white ${projectTitleClasses}`}
-              style={projectTitleStyle}
+              className={`text-white ${projectTitleClasses} hero-title`}
+              style={{
+                fontFamily: 'EnduroWeb, sans-serif',
+                letterSpacing: '0.03em',
+              }}
             >
               {heroTitle}
             </h1>
@@ -60,5 +88,6 @@ export default function Hero({ heroImage, heroTitle, isAboutPopupVisible }: Hero
         />
       </div>
     </section>
+    </>
   );
 }
