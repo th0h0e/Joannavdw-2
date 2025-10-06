@@ -153,6 +153,7 @@ export interface PortfolioProject {
 export interface Homepage {
   id: string;
   Hero_Image: string;
+  Hero_Image_Mobile: string;
   Hero_Title: string;
   Is_Active: boolean;
   collectionId: string;

@@ -3,6 +3,7 @@ import ProjectIndex from './components/ProjectIndex';
 import ProjectPopup from './components/ProjectPopup';
 import AboutPopup from './components/AboutPopup';
 import Hero from './components/Hero';
+import HeroMobile from './components/HeroMobile';
 import LogoTop from './components/LogoTop';
 import LogoBottom from './components/LogoBottom';
 import HamburgerMenu from './components/HamburgerMenu';
@@ -504,12 +505,21 @@ function App() {
       >
       
       {/* Hero Section */}
-      <Hero
-        heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : ''}
-        heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
-        isAboutPopupVisible={showAboutPopup}
-        settingsData={settingsData}
-      />
+      {isDesktop ? (
+        <Hero
+          heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : ''}
+          heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
+          isAboutPopupVisible={showAboutPopup}
+          settingsData={settingsData}
+        />
+      ) : (
+        <HeroMobile
+          heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image_Mobile || homepageData.Hero_Image) : ''}
+          heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
+          isAboutPopupVisible={showAboutPopup}
+          settingsData={settingsData}
+        />
+      )}
 
       {/* Project Sections */}
       {projectsData.map((project, index) => (
