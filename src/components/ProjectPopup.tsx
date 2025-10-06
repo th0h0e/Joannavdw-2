@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import ProjectCardSVG from '../assets/Project Card/JVDW WEB LIGHT BOX copy.svg';
 
 type ProjectPopupProps = {

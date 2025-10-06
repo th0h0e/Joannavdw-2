@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import Asset11Logo from '../assets/logo svg/Asset 11.svg';
 
 type LogoBottomProps = {

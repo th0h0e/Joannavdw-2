@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import ProjectNavigation from './ProjectNavigation';
 import type { Settings } from '../config/pocketbase';
 

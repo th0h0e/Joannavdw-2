@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import CarouselWrapper from './components/CarouselWrapper';
 import ProjectIndex from './components/ProjectIndex';
 import ProjectPopup from './components/ProjectPopup';
 import AboutPopup from './components/AboutPopup';
@@ -7,12 +6,10 @@ import Hero from './components/Hero';
 import LogoTop from './components/LogoTop';
 import LogoBottom from './components/LogoBottom';
 import HamburgerMenu from './components/HamburgerMenu';
-import { CarouselProvider } from './contexts/CarouselContext';
+import MotionCarousel from './components/MotionCarousel';
+import MotionCarouselDesktop from './components/MotionCarouselDesktop';
 import pb, { getImageUrl, getCachedData, setCachedData } from './config/pocketbase';
 import type { PortfolioProject, Homepage, About, Settings } from './config/pocketbase';
-
-// --- Import Hero Image (fallback only) ---
-import heroImage from './assets/Hero Image/Maria Bodil for Nike New Tech Fleece campaign copy.webp';
 
 // Convert PocketBase project to expected format
 const convertPocketBaseProject = (project: PortfolioProject) => ({
@@ -21,7 +18,7 @@ const convertPocketBaseProject = (project: PortfolioProject) => ({
   images: project.Images.map(filename => ({
     src: getImageUrl(project, filename)
   })),
-  responsibility: project.Responsibility
+  responsibility: project.Responsibility_json || project.Responsibility
 });
 
 
@@ -56,15 +53,18 @@ function App() {
 
   // State for responsive behavior
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
-  // Browser detection - read from HTML head (set immediately on page load)
-  const [isSafari] = useState(() => {
-    return document.documentElement.getAttribute('data-browser-safari') === 'true';
-  });
-  
-  const [supportsScrollState] = useState(() => {
-    return document.documentElement.getAttribute('data-supports-scroll-state') === 'true';
-  });
+  // Update responsive states on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch data from PocketBase
   useEffect(() => {
@@ -150,12 +150,33 @@ function App() {
     };
 
     fetchData();
-    
+
     // Cleanup function to prevent state updates after unmount
     return () => {
       isCancelled = true;
     };
   }, []);
+
+  // Update favicon dynamically when settingsData changes
+  useEffect(() => {
+    if (settingsData && settingsData.favicon) {
+      const faviconUrl = getImageUrl(settingsData, settingsData.favicon);
+
+      // Add cache-busting parameter to force browser to reload
+      const cacheBustedUrl = `${faviconUrl}?v=${settingsData.updated}`;
+
+      // Remove existing favicon links
+      const existingLinks = document.querySelectorAll('link[rel="icon"]');
+      existingLinks.forEach(link => link.remove());
+
+      // Create new favicon link
+      const faviconLink = document.createElement('link');
+      faviconLink.rel = 'icon';
+      faviconLink.type = 'image/png';
+      faviconLink.href = cacheBustedUrl;
+      document.head.appendChild(faviconLink);
+    }
+  }, [settingsData]);
 
   // Track window resize for responsive behavior
   useEffect(() => {
@@ -236,17 +257,17 @@ function App() {
       // Get all project sections
       projectsData.forEach((_, index) => {
         const sectionId = `project-${index}`;
-        
+
         // Skip the currently active section
         if (sectionId === currentSectionId) return;
-        
-        // Find the carousel in this section
+
+        // Find the carousel in this section (try both mobile and desktop)
         const section = document.getElementById(sectionId);
         if (!section) return;
-        
-        const carousel = section.querySelector('[data-carousel="css-native"]') as HTMLElement;
+
+        const carousel = section.querySelector('.motion-carousel, .motion-carousel-desktop') as HTMLElement;
         if (!carousel) return;
-        
+
         // Reset carousel scroll position directly (horizontal only)
         // This only affects the horizontal scroll of the carousel, not the main page
         carousel.scrollLeft = 0;
@@ -369,34 +390,34 @@ function App() {
             
             // Wait 1 second after section becomes visible, then show hint
             setTimeout(() => {
-              // Find the carousel in the first project section
+              // Find the carousel in the first project section (mobile/tablet only)
               const firstProjectSection = document.getElementById('project-0');
-              const carousel = firstProjectSection?.querySelector('[data-carousel="css-native"]') as HTMLDivElement;
-              
+              const carousel = firstProjectSection?.querySelector('.motion-carousel') as HTMLDivElement;
+
               if (!carousel) return;
-              
+
               // Get carousel slides
-              const slides = carousel.querySelectorAll('.css-carousel__slide');
-              
+              const slides = carousel.querySelectorAll('.motion-carousel__slide');
+
               if (slides.length < 2) return;
-              
+
               const firstSlide = slides[0];
               const secondSlide = slides[1];
-              
+
               // Animate to second slide (peek position)
-              secondSlide.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'nearest', 
-                inline: 'center' 
+              secondSlide.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'center'
               });
-              
+
               // Wait at peek position, then bounce back to first slide
               setTimeout(() => {
                 setTimeout(() => {
-                  firstSlide.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest', 
-                    inline: 'center' 
+                  firstSlide.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
                   });
                 }, 300);
               }, 200);
@@ -483,31 +504,41 @@ function App() {
       >
       
       {/* Hero Section */}
-      <Hero 
-        heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : heroImage} 
+      <Hero
+        heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : ''}
         heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
         isAboutPopupVisible={showAboutPopup}
         settingsData={settingsData}
       />
-      
+
       {/* Project Sections */}
       {projectsData.map((project, index) => (
-        <section 
-          key={project.title} 
+        <section
+          key={project.title}
           id={`project-${index}`}
           className="relative h-dvh w-full snap-center">
-          <CarouselProvider isSafari={isSafari} supportsScrollState={supportsScrollState}>
-            <CarouselWrapper 
-              mediaItems={project.images}
+          {isDesktop ? (
+            <MotionCarouselDesktop
+              images={project.images}
               projectTitle={project.title}
-              onNextSection={scrollToNextSection}
+              settingsData={settingsData}
+              totalSlides={project.images.length + 1}
               onShowPopup={handleShowPopup}
               isPopupVisible={showPopup}
               isAboutPopupVisible={showAboutPopup}
-              showTopProgressBar={settingsData?.Show_Top_Progress_Bar ?? true}
-              settingsData={settingsData}
             />
-          </CarouselProvider>
+          ) : (
+            <MotionCarousel
+              images={project.images}
+              projectTitle={project.title}
+              settingsData={settingsData}
+              totalSlides={project.images.length + 2}
+              showTopProgressBar={settingsData?.Show_Top_Progress_Bar ?? true}
+              onShowPopup={handleShowPopup}
+              isPopupVisible={showPopup}
+              isAboutPopupVisible={showAboutPopup}
+            />
+          )}
         </section>
       ))}
 

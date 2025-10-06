@@ -1,4 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import ChevronDown from './icons/ChevronDown';
 import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles';
 import { getResponsiveFontSizes } from '../config/pocketbase';
@@ -13,6 +14,14 @@ type HeroProps = {
 
 export default function Hero({ heroImage, heroTitle, isAboutPopupVisible, settingsData }: HeroProps) {
   const fontSizes = getResponsiveFontSizes(settingsData);
+  const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
+
+  // Track initial animation completion
+  useEffect(() => {
+    if (!isAboutPopupVisible && !hasAnimatedIn) {
+      setHasAnimatedIn(true);
+    }
+  }, [isAboutPopupVisible, hasAnimatedIn]);
   return (
     <>
       <style>{`
@@ -54,13 +63,12 @@ export default function Hero({ heroImage, heroTitle, isAboutPopupVisible, settin
         {!isAboutPopupVisible && (
           <motion.div
             className={`absolute top-1/2 left-1/2 z-10 text-center w-full ${projectTitleContainerClasses}`}
-            style={{ 
+            style={{
               transform: 'translate(-50%, -50%)'
             }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, delay: 1.2 }}
+            animate={{ opacity: 1, transition: { duration: 0.15, delay: hasAnimatedIn ? 0 : 1.2 } }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
           >
             <h1 
               className={`text-white ${projectTitleClasses} hero-title`}

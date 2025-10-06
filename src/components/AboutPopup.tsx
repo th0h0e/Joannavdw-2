@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import ProjectCardSVG from '../assets/Project Card/JVDW WEB LIGHT BOX copy.svg';
 import Asset7Logo from '../assets/logo svg/Asset 7.svg';
 import Asset11Logo from '../assets/logo svg/Asset 11.svg';
@@ -140,7 +140,7 @@ export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopup
                     marginBottom: '18px'
                   }}
                 >
-                  {aboutData?.Client_List ? aboutData.Client_List.join(', ') : 'Ipsum, Dolor, Sit Amet, Consectetur, Adipiscing, Aenean, Mattis, Blandit.'}
+                  {(aboutData?.Client_List_Json || aboutData?.Client_List) ? (aboutData.Client_List_Json || aboutData.Client_List).join(', ') : 'Ipsum, Dolor, Sit Amet, Consectetur, Adipiscing, Aenean, Mattis, Blandit.'}
                 </p>
                 
                 <button 

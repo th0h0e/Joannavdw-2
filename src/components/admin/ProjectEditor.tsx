@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import pb, { getImageUrl, clearCache } from '../../config/pocketbase';
 import type { PortfolioProject } from '../../config/pocketbase';
 
@@ -20,7 +21,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
   const [title, setTitle] = useState(project?.Title || '');
   const [description, setDescription] = useState(project?.Description || '');
   const [order, setOrder] = useState(project?.Order || 0);
-  const [responsibilities, setResponsibilities] = useState<string[]>(project?.Responsibility || []);
+  const [responsibilities, setResponsibilities] = useState<string[]>(project?.Responsibility_json || project?.Responsibility || []);
   const [newResponsibility, setNewResponsibility] = useState('');
   const [images, setImages] = useState<ImageItem[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
@@ -43,7 +44,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
 
   const handleAddResponsibility = () => {
     if (newResponsibility.trim()) {
-      setResponsibilities([...responsibilities, newResponsibility.trim()]);
+      setResponsibilities([...responsibilities, newResponsibility.trim().toUpperCase()]);
       setNewResponsibility('');
     }
   };
@@ -159,9 +160,9 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
       formData.append('Description', description);
       formData.append('Order', order.toString());
 
-      // Add responsibilities as JSON array
+      // Add responsibilities to the json field (not the select field)
       responsibilities.forEach((resp) => {
-        formData.append('Responsibility', resp);
+        formData.append('Responsibility_json', resp);
       });
 
       // Handle images - need to preserve order
@@ -235,21 +236,32 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-gray-950/60 backdrop-blur-md py-12 overflow-y-auto z-50"
-      style={{ fontFamily: 'EnduroWeb, sans-serif' }}
-      onClick={onCancel}
-    >
-      <div className="max-w-4xl mx-auto px-6">
-        <div
-          className="bg-black/60 rounded-lg border border-gray-700/50 p-8 backdrop-blur-xl shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md py-12 overflow-y-auto z-50"
+        style={{ fontFamily: 'EnduroWeb, sans-serif' }}
+        onClick={onCancel}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.div
+          className="max-w-4xl mx-auto px-6"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         >
+          <div
+            className="bg-black/85 rounded-sm border border-zinc-700/50 p-8 backdrop-blur-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
           <div className="mb-8">
             <h2 className="text-xl font-medium text-white tracking-tight">
               {project ? 'Edit Project' : 'New Project'}
             </h2>
-            <p className="text-xs text-gray-500 mt-1 tracking-wide uppercase">
+            <p className="text-xs text-zinc-500 mt-1 tracking-wide uppercase">
               {project ? 'Update project details and images' : 'Create a new portfolio project'}
             </p>
           </div>
@@ -257,7 +269,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Images */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-3 uppercase tracking-wider">
+              <label className="block text-xs font-medium text-zinc-400 mb-3 uppercase tracking-wider">
                 Images (Drag to reorder)
               </label>
 
@@ -267,11 +279,11 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 onDragLeave={handleFileDragLeave}
                 onDragOver={handleFileDragOver}
                 onDrop={handleFileDrop}
-                className={`relative border-2 border-dashed rounded-lg transition-all ${
+                className={`relative border-2 border-dashed rounded-sm transition-all ${
                   isDraggingFile
                     ? 'border-white/40 bg-white/5'
-                    : 'border-gray-700/50 bg-black/20'
-                } ${images.length === 0 ? 'cursor-pointer hover:border-gray-600/50 hover:bg-black/30' : ''}`}
+                    : 'border-zinc-700/50 bg-black/20'
+                } ${images.length === 0 ? 'cursor-pointer hover:border-zinc-600/50 hover:bg-black/30' : ''}`}
               >
                 <input
                   type="file"
@@ -289,7 +301,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                     <div className="flex flex-col items-center gap-3">
                       <svg
                         className={`w-12 h-12 transition-colors ${
-                          isDraggingFile ? 'text-white' : 'text-gray-600'
+                          isDraggingFile ? 'text-white' : 'text-zinc-600'
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -304,11 +316,11 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                       </svg>
                       <div>
                         <p className={`text-sm font-medium transition-colors ${
-                          isDraggingFile ? 'text-white' : 'text-gray-400'
+                          isDraggingFile ? 'text-white' : 'text-zinc-400'
                         } uppercase tracking-wide`}>
                           {isDraggingFile ? 'Drop images here' : 'Drag & drop images'}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1 tracking-wide">
+                        <p className="text-xs text-zinc-600 mt-1 tracking-wide">
                           or click to browse
                         </p>
                       </div>
@@ -327,9 +339,9 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                           onDragStart={() => handleDragStart(index)}
                           onDragOver={(e) => handleDragOver(e, index)}
                           onDragEnd={handleDragEnd}
-                          className={`relative group cursor-move border rounded-lg overflow-hidden ${
-                            draggedIndex === index ? 'border-gray-500 opacity-50' : 'border-gray-700/50'
-                          } hover:border-gray-600 transition-all`}
+                          className={`relative group cursor-move border rounded-sm overflow-hidden ${
+                            draggedIndex === index ? 'border-zinc-500 opacity-50' : 'border-zinc-700/50'
+                          } hover:border-zinc-600 transition-all`}
                         >
                           <div className="aspect-square bg-black/40">
                             <img
@@ -340,7 +352,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                           </div>
 
                           {/* Order Badge */}
-                          <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
+                          <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-sm text-xs font-medium">
                             {index + 1}
                           </div>
 
@@ -348,7 +360,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                           <button
                             type="button"
                             onClick={() => handleDeleteImage(image)}
-                            className="absolute top-2 right-2 bg-red-600/10 backdrop-blur-md text-red-400 px-2.5 py-1 rounded-full text-xs hover:bg-red-600/20 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-all font-medium uppercase tracking-wide border border-red-600/20 hover:border-red-600/30"
+                            className="absolute top-2 right-2 bg-red-600/10 backdrop-blur-md text-red-400 px-2.5 py-1 rounded-sm text-xs hover:bg-red-600/20 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-all font-medium uppercase tracking-wide border border-red-600/20 hover:border-red-600/30"
                           >
                             Delete
                           </button>
@@ -370,7 +382,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
 
             {/* Title */}
             <div>
-              <label htmlFor="title" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+              <label htmlFor="title" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
                 Project Title *
               </label>
               <input
@@ -379,14 +391,14 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-black/30 border border-gray-700/50 text-white rounded focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-gray-600 text-sm transition-all"
+                className="w-full px-4 py-3 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-zinc-600 text-sm transition-all"
                 placeholder="e.g., Maria Bodil for Nike"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+              <label htmlFor="description" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
                 Description *
               </label>
               <textarea
@@ -395,14 +407,14 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 rows={6}
-                className="w-full px-4 py-3 bg-black/30 border border-gray-700/50 text-white rounded focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-gray-600 text-sm transition-all resize-none"
+                className="w-full px-4 py-3 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-zinc-600 text-sm transition-all resize-none"
                 placeholder="Project description..."
               />
             </div>
 
             {/* Order */}
             <div>
-              <label htmlFor="order" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+              <label htmlFor="order" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
                 Position in Portfolio *
               </label>
               <input
@@ -412,13 +424,13 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 onChange={(e) => setOrder(parseInt(e.target.value))}
                 required
                 min="0"
-                className="w-full px-4 py-3 bg-black/30 border border-gray-700/50 text-white rounded focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 text-sm transition-all"
+                className="w-full px-4 py-3 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 text-sm transition-all"
               />
             </div>
 
             {/* Responsibilities */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+              <label className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
                 Responsibilities
               </label>
               <div className="flex gap-2 mb-3">
@@ -427,13 +439,13 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                   value={newResponsibility}
                   onChange={(e) => setNewResponsibility(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddResponsibility())}
-                  className="flex-1 px-4 py-3 bg-black/30 border border-gray-700/50 text-white rounded focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-gray-600 text-sm transition-all h-[42px]"
+                  className="flex-1 px-4 py-2.5 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-zinc-600 text-sm transition-all"
                   placeholder="e.g., CREATIVE PRODUCTION"
                 />
                 <button
                   type="button"
                   onClick={handleAddResponsibility}
-                  className="px-6 py-3 bg-white text-black rounded text-sm hover:bg-gray-100 font-medium transition-all uppercase tracking-wide h-[42px]"
+                  className="px-6 py-3 bg-white text-black rounded-sm text-sm hover:bg-zinc-100 font-medium transition-all uppercase tracking-wide"
                 >
                   Add
                 </button>
@@ -442,7 +454,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 {responsibilities.map((resp, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-2 bg-black/30 border border-gray-700/30 text-gray-300 px-3 py-1.5 rounded-full text-xs tracking-wide"
+                    className="inline-flex items-center gap-2 bg-black/30 border border-zinc-700/30 text-zinc-300 px-3 py-1.5 rounded-sm text-xs tracking-wide"
                   >
                     {resp}
                     <button
@@ -462,21 +474,22 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
               <button
                 type="button"
                 onClick={onCancel}
-                className="flex-1 px-6 bg-black/30 border border-gray-700/50 text-gray-300 rounded hover:bg-black/50 hover:text-white hover:border-gray-600/50 transition-all text-sm uppercase tracking-wide h-[48px] flex items-center justify-center"
+                className="flex-1 px-6 py-3 bg-black/30 border border-zinc-700/50 text-zinc-300 rounded-sm hover:bg-black/50 hover:text-white hover:border-zinc-600/50 transition-all text-sm uppercase tracking-wide"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-6 bg-white text-black rounded hover:bg-gray-100 disabled:bg-gray-600 disabled:text-gray-500 disabled:cursor-not-allowed transition-all font-medium text-sm uppercase tracking-wide h-[48px] flex items-center justify-center"
+                className="flex-1 px-6 py-3 bg-white text-black rounded-sm hover:bg-zinc-100 disabled:bg-zinc-600 disabled:text-zinc-500 disabled:cursor-not-allowed transition-all font-medium text-sm uppercase tracking-wide"
               >
                 {loading ? 'Saving...' : project ? 'Update Project' : 'Create Project'}
               </button>
             </div>
           </form>
         </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

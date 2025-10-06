@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import Asset7Logo from '../assets/logo svg/Asset 7.svg';
 
 type LogoTopProps = {

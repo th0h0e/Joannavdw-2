@@ -204,3 +204,14 @@ const projectsData = [
 - **Modern Browsers**: Optimized for CSS scroll-snap support
 - **Touch Devices**: Native touch scrolling behavior
 - **Desktop**: Mouse wheel and trackpad gesture support
+
+## Admin Dashboard Styling
+- **Animation Library**: `motion/react` (not framer-motion)
+- **Color Palette**: Zinc scale (`zinc-950`, `zinc-900`, `zinc-800`, etc.) for consistency
+- **Border Radius**: `rounded-sm` (2px) across all elements
+- **Typography**: EnduroWeb font family, uppercase tracking
+- **Delete Buttons**: Red accent (`red-600/10`, `red-400`) - unchanged from other elements
+- **Backgrounds**: Black with opacity (`black/30`, `black/60`, `black/80`) for glass morphism
+- **Borders**: Zinc with opacity (`zinc-700/50`, `zinc-800/50`)
+- **Button Heights**: Standard 34px (`py-2.5`) for all buttons except logout
+- **Hover Effects**: Blur overlay (`bg-black/30 backdrop-blur-sm`) with 0.3s ease-in transition

@@ -5,35 +5,62 @@ const pb = new PocketBase('https://admin.kontext.site');
 
 export default pb;
 
-// Cache configuration - 4 times per day (every 6 hours)
-const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+// Cache configuration - Long duration for better performance (7 days)
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+
+// Cache version key for invalidation
+const CACHE_VERSION_KEY = 'pocketbase_cache_version';
 
 // Cache storage interface
 interface CacheEntry {
   data: any;
   timestamp: number;
+  version: number;
 }
+
+// Get current cache version
+const getCacheVersion = (): number => {
+  try {
+    const version = localStorage.getItem(CACHE_VERSION_KEY);
+    return version ? parseInt(version, 10) : 1;
+  } catch {
+    return 1;
+  }
+};
+
+// Increment cache version (called when admin updates data)
+const incrementCacheVersion = (): void => {
+  try {
+    const currentVersion = getCacheVersion();
+    localStorage.setItem(CACHE_VERSION_KEY, String(currentVersion + 1));
+    console.log(`Cache version updated to ${currentVersion + 1}`);
+  } catch (error) {
+    console.warn('Cache version update error:', error);
+  }
+};
 
 // Cache storage using localStorage
 const getCacheKey = (collection: string) => `pocketbase_cache_${collection}`;
 
-const isValidCache = (timestamp: number): boolean => {
-  return Date.now() - timestamp < CACHE_DURATION;
+const isValidCache = (timestamp: number, version: number): boolean => {
+  const notExpired = Date.now() - timestamp < CACHE_DURATION;
+  const versionMatches = version === getCacheVersion();
+  return notExpired && versionMatches;
 };
 
 export const getCachedData = <T>(collection: string): T | null => {
   try {
     const cached = localStorage.getItem(getCacheKey(collection));
     if (!cached) return null;
-    
+
     const entry: CacheEntry = JSON.parse(cached);
-    if (isValidCache(entry.timestamp)) {
-      console.log(`Using cached data for ${collection} (age: ${Math.round((Date.now() - entry.timestamp) / 1000 / 60)} minutes)`);
+    if (isValidCache(entry.timestamp, entry.version)) {
+      console.log(`Using cached data for ${collection} (age: ${Math.round((Date.now() - entry.timestamp) / 1000 / 60)} minutes, version: ${entry.version})`);
       return entry.data;
     } else {
-      // Clean up expired cache
+      // Clean up expired or outdated cache
       localStorage.removeItem(getCacheKey(collection));
-      console.log(`Cache expired for ${collection}, will fetch fresh data`);
+      console.log(`Cache invalidated for ${collection} (expired or version mismatch)`);
       return null;
     }
   } catch (error) {
@@ -46,10 +73,11 @@ export const setCachedData = (collection: string, data: any): void => {
   try {
     const entry: CacheEntry = {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      version: getCacheVersion()
     };
     localStorage.setItem(getCacheKey(collection), JSON.stringify(entry));
-    console.log(`Cached data for ${collection}`);
+    console.log(`Cached data for ${collection} with version ${entry.version}`);
   } catch (error) {
     console.warn('Cache write error:', error);
   }
@@ -58,17 +86,21 @@ export const setCachedData = (collection: string, data: any): void => {
 export const clearCache = (collection?: string): void => {
   try {
     if (collection) {
+      // Increment version to invalidate all caches
+      incrementCacheVersion();
+      // Also remove specific collection cache immediately
       localStorage.removeItem(getCacheKey(collection));
-      console.log(`Cleared cache for ${collection}`);
+      console.log(`Cleared cache for ${collection} and incremented cache version`);
     } else {
-      // Clear all PocketBase caches
+      // Clear all PocketBase caches and increment version
+      incrementCacheVersion();
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
         if (key.startsWith('pocketbase_cache_')) {
           localStorage.removeItem(key);
         }
       });
-      console.log('Cleared all PocketBase caches');
+      console.log('Cleared all PocketBase caches and incremented cache version');
     }
   } catch (error) {
     console.warn('Cache clear error:', error);
@@ -110,6 +142,7 @@ export interface PortfolioProject {
   Images: string[];
   Order: number;
   Responsibility: string[];
+  Responsibility_json: string[] | null;
   collectionId: string;
   collectionName: string;
   created: string;
@@ -133,6 +166,7 @@ export interface About {
   id: string;
   About_Description: string;
   Client_List: string[];
+  Client_List_Json: string[] | null;
   Contact_Email: string;
   Contact_Message: string;
   Expertise_Description: string;
@@ -154,6 +188,7 @@ export interface Settings {
   Large_Desktop_Font_Size: number;
   Mobile_Font_Size: number;
   Tablet_Font_Size: number;
+  favicon?: string;
   collectionId: string;
   collectionName: string;
   created: string;
