@@ -55,6 +55,26 @@ export const setCachedData = (collection: string, data: any): void => {
   }
 };
 
+export const clearCache = (collection?: string): void => {
+  try {
+    if (collection) {
+      localStorage.removeItem(getCacheKey(collection));
+      console.log(`Cleared cache for ${collection}`);
+    } else {
+      // Clear all PocketBase caches
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('pocketbase_cache_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      console.log('Cleared all PocketBase caches');
+    }
+  } catch (error) {
+    console.warn('Cache clear error:', error);
+  }
+};
+
 // Helper function to get image URLs
 export const getImageUrl = (record: any, filename: string) => {
   return pb.files.getURL(record, filename);
