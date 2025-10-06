@@ -243,14 +243,6 @@ function App() {
 
   // Removed old hint management - now handled by carousel's currentSlide
 
-
-  const scrollToNextSection = () => {
-    const main = document.querySelector('main');
-    if (main) {
-      main.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
-    }
-  };
-
   // Reset inactive project carousels to first slide using CSS scroll behavior
   const resetInactiveCarousels = (currentSectionId: string) => {
     // Add a small delay to allow the section transition to complete

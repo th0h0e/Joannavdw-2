@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   }, []);
 
   // Handle swipe gesture
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = (_event: any, info: any) => {
     const swipeVelocityThreshold = 500;
     const swipeOffsetThreshold = 50;
 
