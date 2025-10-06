@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import pb, { clearCache, getImageUrl } from '../../config/pocketbase';
 import type { About, Homepage, Settings } from '../../config/pocketbase';
+import AboutPopup from '../AboutPopup';
 
 type SettingsSidebarProps = {
   isOpen: boolean;
@@ -161,13 +162,22 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
     }
   };
 
+  // Create preview data combining form values with existing aboutData
+  const previewAboutData: About | null = aboutData ? {
+    ...aboutData,
+    About_Description: aboutDescription,
+    Expertise_Description: expertiseDescription,
+    Client_List_Json: clientList,
+    Contact_Email: contactEmail
+  } : null;
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-neutral-950/60 backdrop-blur-md z-40"
+            className="fixed inset-0 bg-neutral-900/70 backdrop-blur-md z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -175,9 +185,18 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
             onClick={onClose}
           />
 
+          {/* About Popup Preview */}
+          <div className="fixed top-1/2" style={{ left: '25%', transform: 'translate(-50%, -50%)', zIndex: 45 }}>
+            <AboutPopup
+              isVisible={true}
+              onClose={() => {}}
+              aboutData={previewAboutData}
+            />
+          </div>
+
           {/* Sidebar */}
           <motion.div
-            className="fixed right-0 top-0 h-full w-3/4 md:w-1/2 bg-black/85 backdrop-blur-xl border-l border-neutral-700/50 shadow-2xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-3/4 md:w-1/2 bg-black/85 backdrop-blur-xl border-l border-neutral-700/60 shadow-2xl z-50 flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -186,13 +205,13 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
           >
             <form onSubmit={handleSubmit} className="flex flex-col h-full">
               {/* Sticky Header */}
-              <div className="flex-shrink-0 p-8 border-b border-neutral-800/50 flex items-center gap-4 backdrop-blur-sm">
+              <div className="flex-shrink-0 p-8 border-b border-neutral-800/60 flex items-center gap-4 backdrop-blur-sm">
                 {/* Header Text */}
                 <div className="flex-1">
                   <h2 className="text-xl font-medium text-white tracking-tight">
                     Settings
                   </h2>
-                  <p className="text-xs text-neutral-500 mt-1 tracking-wide uppercase">
+                  <p className="text-xs text-neutral-400 mt-1 tracking-wide uppercase">
                     Configure site content
                   </p>
                 </div>
@@ -200,7 +219,7 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                 {/* Favicon Avatar */}
                 <div
                   onClick={() => faviconFileInputRef.current?.click()}
-                  className="flex-shrink-0 w-12 h-12 rounded-sm bg-white/10 border border-neutral-700/50 hover:border-white/30 cursor-pointer transition-all overflow-hidden group hover:shadow-lg hover:shadow-white/5"
+                  className="flex-shrink-0 w-12 h-12 rounded-sm bg-white/10 border border-neutral-700/60 hover:border-white/30 cursor-pointer transition-all overflow-hidden group hover:shadow-lg hover:shadow-white/5"
                   title="Click to update favicon"
                 >
                   {faviconUrl ? (
@@ -210,7 +229,7 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-600 group-hover:text-neutral-400 transition-colors">
+                    <div className="w-full h-full flex items-center justify-center text-neutral-500 group-hover:text-neutral-400 transition-colors">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -236,21 +255,21 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                 <div>
                   <h3 className="text-sm font-medium text-white mb-4 uppercase tracking-wider">Hero Section</h3>
                   <div>
-                    <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+                    <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                       Hero Title
                     </label>
                     <input
                       type="text"
                       value={heroTitle}
                       onChange={(e) => setHeroTitle(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                      className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                       placeholder="Creative Strategy and Communication"
                     />
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-neutral-700/50"></div>
+                <div className="border-t border-neutral-700/60"></div>
 
                 {/* About Section */}
                 <div>
@@ -258,31 +277,31 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                         About Description
                       </label>
                       <textarea
                         value={aboutDescription}
                         onChange={(e) => setAboutDescription(e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all resize-none"
+                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all resize-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                         Expertise Description
                       </label>
                       <textarea
                         value={expertiseDescription}
                         onChange={(e) => setExpertiseDescription(e.target.value)}
                         rows={3}
-                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all resize-none"
+                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all resize-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-neutral-400 mb-3 uppercase tracking-wider">
+                      <label className="block text-xs font-medium text-neutral-300 mb-3 uppercase tracking-wider">
                         Client List
                       </label>
 
@@ -292,7 +311,7 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                           value={newClient}
                           onChange={(e) => setNewClient(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddClient())}
-                          className="flex-1 px-4 py-2.5 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                          className="flex-1 px-4 py-2.5 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           placeholder="e.g., NIKE"
                         />
                         <button
@@ -308,7 +327,7 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                         {clientList.map((client, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800/50 text-neutral-300 rounded-sm text-xs border border-neutral-700/50"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800/60 text-neutral-200 rounded-sm text-xs border border-neutral-700/60"
                           >
                             {client}
                             <button
@@ -326,7 +345,7 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-neutral-700/50"></div>
+                <div className="border-t border-neutral-700/60"></div>
 
                 {/* Global Settings */}
                 <div>
@@ -334,60 +353,60 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                         Contact Email
                       </label>
                       <input
                         type="email"
                         value={contactEmail}
                         onChange={(e) => setContactEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                         placeholder="hello@example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                         Font Sizes (rem)
                       </label>
                       <div className="grid grid-cols-4 gap-2">
                         <div>
-                          <label className="block text-xs text-neutral-500 mb-1">Mobile</label>
+                          <label className="block text-xs text-neutral-400 mb-1">Mobile</label>
                           <input
                             type="number"
                             step="0.125"
                             value={mobileFontSize}
                             onChange={(e) => setMobileFontSize(parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-neutral-500 mb-1">Tablet</label>
+                          <label className="block text-xs text-neutral-400 mb-1">Tablet</label>
                           <input
                             type="number"
                             step="0.125"
                             value={tabletFontSize}
                             onChange={(e) => setTabletFontSize(parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-neutral-500 mb-1">Desktop</label>
+                          <label className="block text-xs text-neutral-400 mb-1">Desktop</label>
                           <input
                             type="number"
                             step="0.125"
                             value={desktopFontSize}
                             onChange={(e) => setDesktopFontSize(parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-neutral-500 mb-1">Large</label>
+                          <label className="block text-xs text-neutral-400 mb-1">Large</label>
                           <input
                             type="number"
                             step="0.125"
                             value={largeDesktopFontSize}
                             onChange={(e) => setLargeDesktopFontSize(parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-600 text-sm transition-all"
+                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
                       </div>
@@ -399,13 +418,13 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
                           type="checkbox"
                           checked={showTopProgressBar}
                           onChange={(e) => setShowTopProgressBar(e.target.checked)}
-                          className="w-4 h-4 bg-black/30 border border-neutral-700/50 rounded-sm text-white focus:ring-1 focus:ring-white/20"
+                          className="w-4 h-4 bg-black/30 border border-neutral-700/60 rounded-sm text-white focus:ring-1 focus:ring-white/20"
                         />
-                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-neutral-300 uppercase tracking-wider">
                           Show Top Progress Bar
                         </span>
                       </label>
-                      <p className="text-xs text-neutral-600 mt-1 ml-7">
+                      <p className="text-xs text-neutral-500 mt-1 ml-7">
                         Display progress bar at top of carousel
                       </p>
                     </div>
@@ -414,11 +433,11 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
               </div>
 
               {/* Sticky Footer */}
-              <div className="flex-shrink-0 p-8 border-t border-neutral-800/50 flex gap-3 backdrop-blur-sm">
+              <div className="flex-shrink-0 p-8 border-t border-neutral-800/60 flex gap-3 backdrop-blur-sm">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 bg-black/30 border border-neutral-700/50 text-neutral-300 rounded-sm text-sm hover:bg-black/50 hover:text-white hover:border-neutral-600/50 font-medium transition-all uppercase tracking-wide"
+                  className="flex-1 px-6 py-3 bg-black/30 border border-neutral-700/60 text-neutral-200 rounded-sm text-sm hover:bg-black/50 hover:text-white hover:border-neutral-600/60 font-medium transition-all uppercase tracking-wide"
                 >
                   Cancel
                 </button>

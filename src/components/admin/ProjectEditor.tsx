@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import pb, { getImageUrl, clearCache } from '../../config/pocketbase';
 import type { PortfolioProject } from '../../config/pocketbase';
+import ProjectPopup from '../ProjectPopup';
 
 type ProjectEditorProps = {
   project: PortfolioProject | null;
@@ -237,39 +238,55 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md py-12 overflow-y-auto z-50"
-        style={{ fontFamily: 'EnduroWeb, sans-serif' }}
-        onClick={onCancel}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+      <>
+        {/* Backdrop */}
         <motion.div
-          className="max-w-4xl mx-auto px-6"
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-        >
-          <div
-            className="bg-black/85 rounded-sm border border-zinc-700/50 p-8 backdrop-blur-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-          <div className="mb-8">
-            <h2 className="text-xl font-medium text-white tracking-tight">
-              {project ? 'Edit Project' : 'New Project'}
-            </h2>
-            <p className="text-xs text-zinc-500 mt-1 tracking-wide uppercase">
-              {project ? 'Update project details and images' : 'Create a new portfolio project'}
-            </p>
-          </div>
+          className="fixed inset-0 bg-neutral-900/70 backdrop-blur-md z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          onClick={onCancel}
+        />
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Project Popup Preview (only when editing) */}
+        {project && (
+          <div className="fixed top-1/2" style={{ left: '25%', transform: 'translate(-50%, -50%)', zIndex: 45 }}>
+            <ProjectPopup
+              isVisible={true}
+              onClose={() => {}}
+              projectTitle={title}
+              projectDescription={description}
+              projectResponsibility={responsibilities}
+            />
+          </div>
+        )}
+
+        {/* Sidebar */}
+        <motion.div
+          className="fixed right-0 top-0 h-full w-3/4 md:w-2/3 lg:w-1/2 bg-black/85 backdrop-blur-xl border-l border-neutral-700/60 shadow-2xl z-50 flex flex-col"
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          style={{ fontFamily: 'EnduroWeb, sans-serif' }}
+        >
+          <form onSubmit={handleSubmit} className="flex flex-col h-full">
+            {/* Sticky Header */}
+            <div className="flex-shrink-0 p-8 border-b border-neutral-800/60 backdrop-blur-sm">
+              <h2 className="text-xl font-medium text-white tracking-tight">
+                {project ? 'Edit Project' : 'New Project'}
+              </h2>
+              <p className="text-xs text-neutral-400 mt-1 tracking-wide uppercase">
+                {project ? 'Update project details and images' : 'Create a new portfolio project'}
+              </p>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
             {/* Images */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-3 uppercase tracking-wider">
+              <label className="block text-xs font-medium text-neutral-300 mb-3 uppercase tracking-wider">
                 Images (Drag to reorder)
               </label>
 
@@ -282,8 +299,8 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 className={`relative border-2 border-dashed rounded-sm transition-all ${
                   isDraggingFile
                     ? 'border-white/40 bg-white/5'
-                    : 'border-zinc-700/50 bg-black/20'
-                } ${images.length === 0 ? 'cursor-pointer hover:border-zinc-600/50 hover:bg-black/30' : ''}`}
+                    : 'border-neutral-700/60 bg-black/30'
+                } ${images.length === 0 ? 'cursor-pointer hover:border-neutral-600/60 hover:bg-black/40' : ''}`}
               >
                 <input
                   type="file"
@@ -301,7 +318,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                     <div className="flex flex-col items-center gap-3">
                       <svg
                         className={`w-12 h-12 transition-colors ${
-                          isDraggingFile ? 'text-white' : 'text-zinc-600'
+                          isDraggingFile ? 'text-white' : 'text-neutral-500'
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -316,11 +333,11 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                       </svg>
                       <div>
                         <p className={`text-sm font-medium transition-colors ${
-                          isDraggingFile ? 'text-white' : 'text-zinc-400'
+                          isDraggingFile ? 'text-white' : 'text-neutral-300'
                         } uppercase tracking-wide`}>
                           {isDraggingFile ? 'Drop images here' : 'Drag & drop images'}
                         </p>
-                        <p className="text-xs text-zinc-600 mt-1 tracking-wide">
+                        <p className="text-xs text-neutral-500 mt-1 tracking-wide">
                           or click to browse
                         </p>
                       </div>
@@ -340,10 +357,10 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                           onDragOver={(e) => handleDragOver(e, index)}
                           onDragEnd={handleDragEnd}
                           className={`relative group cursor-move border rounded-sm overflow-hidden ${
-                            draggedIndex === index ? 'border-zinc-500 opacity-50' : 'border-zinc-700/50'
-                          } hover:border-zinc-600 transition-all`}
+                            draggedIndex === index ? 'border-neutral-500 opacity-50' : 'border-neutral-700/60'
+                          } hover:border-neutral-600 transition-all`}
                         >
-                          <div className="aspect-square bg-black/40">
+                          <div className="aspect-square bg-black/50">
                             <img
                               src={image.url}
                               alt={image.filename}
@@ -382,7 +399,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
 
             {/* Title */}
             <div>
-              <label htmlFor="title" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
+              <label htmlFor="title" className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                 Project Title *
               </label>
               <input
@@ -391,14 +408,14 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-zinc-600 text-sm transition-all"
+                className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                 placeholder="e.g., Maria Bodil for Nike"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
+              <label htmlFor="description" className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                 Description *
               </label>
               <textarea
@@ -407,14 +424,14 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 rows={6}
-                className="w-full px-4 py-3 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-zinc-600 text-sm transition-all resize-none"
+                className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all resize-none"
                 placeholder="Project description..."
               />
             </div>
 
             {/* Order */}
             <div>
-              <label htmlFor="order" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
+              <label htmlFor="order" className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                 Position in Portfolio *
               </label>
               <input
@@ -424,13 +441,13 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 onChange={(e) => setOrder(parseInt(e.target.value))}
                 required
                 min="0"
-                className="w-full px-4 py-3 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 text-sm transition-all"
+                className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 text-sm transition-all"
               />
             </div>
 
             {/* Responsibilities */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
+              <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
                 Responsibilities
               </label>
               <div className="flex gap-2 mb-3">
@@ -439,13 +456,13 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                   value={newResponsibility}
                   onChange={(e) => setNewResponsibility(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddResponsibility())}
-                  className="flex-1 px-4 py-2.5 bg-black/30 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-zinc-600 text-sm transition-all"
+                  className="flex-1 px-4 py-2.5 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                   placeholder="e.g., CREATIVE PRODUCTION"
                 />
                 <button
                   type="button"
                   onClick={handleAddResponsibility}
-                  className="px-6 py-3 bg-white text-black rounded-sm text-sm hover:bg-zinc-100 font-medium transition-all uppercase tracking-wide"
+                  className="px-6 py-3 bg-white text-black rounded-sm text-sm hover:bg-neutral-100 font-medium transition-all uppercase tracking-wide"
                 >
                   Add
                 </button>
@@ -454,7 +471,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
                 {responsibilities.map((resp, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-2 bg-black/30 border border-zinc-700/30 text-zinc-300 px-3 py-1.5 rounded-sm text-xs tracking-wide"
+                    className="inline-flex items-center gap-2 bg-black/30 border border-neutral-700/40 text-neutral-200 px-3 py-1.5 rounded-sm text-xs tracking-wide"
                   >
                     {resp}
                     <button
@@ -469,27 +486,28 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
               </div>
             </div>
 
-            {/* Form Actions */}
-            <div className="flex gap-3 pt-8 border-t border-white/10">
+            </div>
+
+            {/* Sticky Footer */}
+            <div className="flex-shrink-0 p-8 border-t border-neutral-800/60 flex gap-3 backdrop-blur-sm">
               <button
                 type="button"
                 onClick={onCancel}
-                className="flex-1 px-6 py-3 bg-black/30 border border-zinc-700/50 text-zinc-300 rounded-sm hover:bg-black/50 hover:text-white hover:border-zinc-600/50 transition-all text-sm uppercase tracking-wide"
+                className="flex-1 px-6 py-3 bg-black/30 border border-neutral-700/60 text-neutral-200 rounded-sm hover:bg-black/50 hover:text-white hover:border-neutral-600/60 transition-all text-sm uppercase tracking-wide font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-white text-black rounded-sm hover:bg-zinc-100 disabled:bg-zinc-600 disabled:text-zinc-500 disabled:cursor-not-allowed transition-all font-medium text-sm uppercase tracking-wide"
+                className="flex-1 px-6 py-3 bg-white text-black rounded-sm hover:bg-neutral-100 disabled:bg-neutral-600 disabled:text-neutral-500 disabled:cursor-not-allowed transition-all font-medium text-sm uppercase tracking-wide hover:shadow-lg hover:shadow-white/10"
               >
                 {loading ? 'Saving...' : project ? 'Update Project' : 'Create Project'}
               </button>
             </div>
           </form>
-        </div>
         </motion.div>
-      </motion.div>
+      </>
     </AnimatePresence>
   );
 }

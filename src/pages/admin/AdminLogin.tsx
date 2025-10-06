@@ -45,7 +45,7 @@ export default function AdminLogin() {
 
   return (
     <motion.div
-      className="min-h-screen bg-zinc-950 flex items-center justify-center px-6 relative overflow-hidden"
+      className="min-h-screen bg-neutral-900 flex items-center justify-center px-6 relative overflow-hidden"
       style={{ fontFamily: 'EnduroWeb, sans-serif' }}
       initial={{ x: '-100%' }}
       animate={{ x: 0 }}
@@ -63,22 +63,22 @@ export default function AdminLogin() {
       />
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-0 bg-black/70" />
 
       {/* Login Form */}
-      <div className="max-w-md w-full bg-black/80 rounded-sm border border-zinc-800/50 p-10 backdrop-blur-xl relative z-10">
+      <div className="max-w-md w-full bg-black/80 rounded-sm border border-neutral-800/60 p-10 backdrop-blur-xl relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-xl font-medium text-white tracking-tight">
             Admin Login
           </h1>
-          <p className="text-xs text-zinc-500 mt-2 tracking-wide uppercase">
+          <p className="text-xs text-neutral-400 mt-2 tracking-wide uppercase">
             Access Dashboard
           </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
+            <label htmlFor="email" className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
               Email
             </label>
             <input
@@ -87,13 +87,13 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600 text-sm transition-all"
+              className="w-full px-4 py-3 bg-neutral-800/60 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:border-neutral-600 placeholder-neutral-500 text-sm transition-all"
               placeholder="admin@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">
+            <label htmlFor="password" className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
               Password
             </label>
             <input
@@ -102,7 +102,7 @@ export default function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 placeholder-zinc-600 text-sm transition-all"
+              className="w-full px-4 py-3 bg-neutral-800/60 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:border-neutral-600 placeholder-neutral-500 text-sm transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -116,7 +116,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-2.5 bg-black/30 border border-zinc-700/50 text-zinc-300 rounded-sm hover:bg-black/50 hover:text-white hover:border-zinc-600/50 disabled:bg-zinc-600 disabled:text-zinc-500 disabled:cursor-not-allowed transition-all text-sm uppercase tracking-wide"
+            className="w-full px-6 py-2.5 bg-black/30 border border-neutral-700/60 text-neutral-200 rounded-sm hover:bg-black/50 hover:text-white hover:border-neutral-600/60 disabled:bg-neutral-600 disabled:text-neutral-500 disabled:cursor-not-allowed transition-all text-sm uppercase tracking-wide"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
@@ -125,7 +125,7 @@ export default function AdminLogin() {
         <div className="mt-6 text-center">
           <a
             href="/"
-            className="text-xs text-zinc-500 hover:text-white transition-colors uppercase tracking-wide"
+            className="text-xs text-neutral-400 hover:text-white transition-colors uppercase tracking-wide"
           >
             ← Back to Portfolio
           </a>
