@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import pb, { clearCache, getImageUrl } from '../../config/pocketbase';
+import pb, { getImageUrl } from '../../config/pocketbase';
 import type { About, Homepage, Settings } from '../../config/pocketbase';
 import AboutPopup from '../AboutPopup';
 
@@ -100,9 +100,6 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
 
       await pb.collection('Settings').update(settingsData.id, formData);
 
-      // Clear cache so frontend shows updated favicon immediately
-      clearCache('Settings');
-
       // Refresh favicon URL
       const updatedSettings = await pb.collection('Settings').getOne<Settings>(settingsData.id);
       if (updatedSettings.favicon) {
@@ -127,7 +124,6 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
         await pb.collection('Homepage').update(homepageData.id, {
           Hero_Title: heroTitle
         });
-        clearCache('Homepage');
       }
 
       // Update About
@@ -138,7 +134,6 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
           Client_List_Json: clientList,
           Contact_Email: contactEmail
         });
-        clearCache('About');
       }
 
       // Update Settings
@@ -150,7 +145,6 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
           Desktop_Font_Size: desktopFontSize,
           Large_Desktop_Font_Size: largeDesktopFontSize
         });
-        clearCache('Settings');
       }
 
       onClose();

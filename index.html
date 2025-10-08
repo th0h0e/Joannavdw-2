@@ -11,10 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#000000" />
-    
-    <!-- Preload the custom font to prevent FOUT -->
-    <link rel="preload" href="/fonts/EnduroWeb-Medium.woff" as="font" type="font/woff" crossorigin="anonymous">
-    
+
     <!-- Hero image now loaded dynamically from PocketBase -->
 
     <!-- Web App Manifest -->
@@ -42,14 +39,6 @@
         // Set data attributes for JavaScript access
         root.setAttribute('data-browser-safari', isSafariBrowser.toString());
         root.setAttribute('data-supports-scroll-state', supportsScrollState.toString());
-        
-        // Debug log
-        console.log('Browser Detection (Head):', {
-          userAgent: navigator.userAgent,
-          isSafari: isSafariBrowser,
-          supportsScrollState: supportsScrollState,
-          useCSSDection: !isSafariBrowser && supportsScrollState
-        });
       })();
     </script>
     

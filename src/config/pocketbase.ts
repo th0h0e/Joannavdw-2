@@ -33,7 +33,6 @@ const incrementCacheVersion = (): void => {
   try {
     const currentVersion = getCacheVersion();
     localStorage.setItem(CACHE_VERSION_KEY, String(currentVersion + 1));
-    console.log(`Cache version updated to ${currentVersion + 1}`);
   } catch (error) {
     console.warn('Cache version update error:', error);
   }
@@ -55,12 +54,10 @@ export const getCachedData = <T>(collection: string): T | null => {
 
     const entry: CacheEntry = JSON.parse(cached);
     if (isValidCache(entry.timestamp, entry.version)) {
-      console.log(`Using cached data for ${collection} (age: ${Math.round((Date.now() - entry.timestamp) / 1000 / 60)} minutes, version: ${entry.version})`);
       return entry.data;
     } else {
       // Clean up expired or outdated cache
       localStorage.removeItem(getCacheKey(collection));
-      console.log(`Cache invalidated for ${collection} (expired or version mismatch)`);
       return null;
     }
   } catch (error) {
@@ -77,7 +74,6 @@ export const setCachedData = (collection: string, data: any): void => {
       version: getCacheVersion()
     };
     localStorage.setItem(getCacheKey(collection), JSON.stringify(entry));
-    console.log(`Cached data for ${collection} with version ${entry.version}`);
   } catch (error) {
     console.warn('Cache write error:', error);
   }
@@ -90,7 +86,6 @@ export const clearCache = (collection?: string): void => {
       incrementCacheVersion();
       // Also remove specific collection cache immediately
       localStorage.removeItem(getCacheKey(collection));
-      console.log(`Cleared cache for ${collection} and incremented cache version`);
     } else {
       // Clear all PocketBase caches and increment version
       incrementCacheVersion();
@@ -100,7 +95,6 @@ export const clearCache = (collection?: string): void => {
           localStorage.removeItem(key);
         }
       });
-      console.log('Cleared all PocketBase caches and incremented cache version');
     }
   } catch (error) {
     console.warn('Cache clear error:', error);

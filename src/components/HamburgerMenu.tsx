@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import ProjectNavigation from './ProjectNavigation';
 import type { Settings } from '../config/pocketbase';
@@ -48,57 +49,60 @@ export default function HamburgerMenu({ projectTitles, isPopupVisible = false, s
       )}
 
       {/* Menu Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              className="fixed inset-0 bg-white z-[9998]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={closeMenu}
-            />
+      {createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                className="fixed inset-0 bg-white z-[9998]"
+                style={{ height: '100lvh' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                onClick={closeMenu}
+              />
 
-            {/* Menu Content */}
-            <motion.div
-              className="fixed inset-0 z-[9999] flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <div className="w-full h-dvh overflow-y-auto">
-                <div className="min-h-dvh flex items-center justify-center py-20">
-                  <ProjectNavigation 
-                    projectTitles={projectTitles}
-                    settingsData={settingsData}
-                    onLinkClick={(index) => {
-                      closeMenu();
-                      
-                      // Navigate after menu closes to avoid state conflicts
-                      setTimeout(() => {
-                        window.location.hash = `#project-${index}`;
-                        
-                        // Reset all carousels to first slide after navigation
+              {/* Menu Content */}
+              <motion.div
+                className="fixed inset-0 z-[9999] flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                style={{ height: '100lvh' }}
+              >
+                <div className="w-full flex items-center justify-center">
+                    <ProjectNavigation
+                      projectTitles={projectTitles}
+                      settingsData={settingsData}
+                      onLinkClick={(index) => {
+                        closeMenu();
+
+                        // Navigate after menu closes to avoid state conflicts
                         setTimeout(() => {
-                          const carousels = document.querySelectorAll('[data-carousel]');
-                          carousels.forEach(carousel => {
-                            if (carousel instanceof HTMLElement) {
-                              carousel.scrollLeft = 0;
-                            }
-                          });
-                        }, 100);
-                      }, 300); // Wait for menu close animation
-                    }}
-                  />
+                          window.location.hash = `#project-${index}`;
+
+                          // Reset all carousels to first slide after navigation
+                          setTimeout(() => {
+                            const carousels = document.querySelectorAll('[data-carousel]');
+                            carousels.forEach(carousel => {
+                              if (carousel instanceof HTMLElement) {
+                                carousel.scrollLeft = 0;
+                              }
+                            });
+                          }, 100);
+                        }, 300); // Wait for menu close animation
+                      }}
+                    />
                 </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

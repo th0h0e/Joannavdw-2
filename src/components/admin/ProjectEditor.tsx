@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import pb, { getImageUrl, clearCache } from '../../config/pocketbase';
+import pb, { getImageUrl } from '../../config/pocketbase';
 import type { PortfolioProject } from '../../config/pocketbase';
-import ProjectPopup from '../ProjectPopup';
+import ProjectPopupPreview from './ProjectPopupPreview';
 
 type ProjectEditorProps = {
   project: PortfolioProject | null;
@@ -29,6 +30,16 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
   const [loading, setLoading] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Track window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Initialize images from existing project
   useEffect(() => {
@@ -42,6 +53,14 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
       setImages(existingImages);
     }
   }, [project]);
+
+  // Prevent body scroll when sidebar is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleAddResponsibility = () => {
     if (newResponsibility.trim()) {
@@ -214,10 +233,6 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
         await pb.collection('Portfolio_Projects').create(formData);
       }
 
-      // Clear cache so frontend shows updated data immediately
-      clearCache('Portfolio_Projects');
-      console.log('Cache cleared - frontend will show fresh data on next load');
-
       onSave();
     } catch (err: any) {
       console.error('Error saving project:', err);
@@ -236,7 +251,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <>
         {/* Backdrop */}
@@ -249,12 +264,18 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
           onClick={onCancel}
         />
 
-        {/* Project Popup Preview (only when editing) */}
-        {project && (
-          <div className="fixed top-1/2" style={{ left: '25%', transform: 'translate(-50%, -50%)', zIndex: 45 }}>
-            <ProjectPopup
-              isVisible={true}
-              onClose={() => {}}
+        {/* Project Popup Preview (only when editing on desktop) */}
+        {project && !isMobile && (
+          <div
+            className="absolute top-1/2"
+            style={{
+              left: '25%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 45,
+              pointerEvents: 'none'
+            }}
+          >
+            <ProjectPopupPreview
               projectTitle={title}
               projectDescription={description}
               projectResponsibility={responsibilities}
@@ -264,12 +285,12 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
 
         {/* Sidebar */}
         <motion.div
-          className="fixed right-0 top-0 h-full w-3/4 md:w-2/3 lg:w-1/2 bg-black/85 backdrop-blur-xl border-l border-neutral-700/60 shadow-2xl z-50 flex flex-col"
+          className="fixed right-0 top-0 w-3/4 md:w-2/3 lg:w-1/2 bg-black/85 backdrop-blur-xl border-l border-neutral-700/60 shadow-2xl z-50 flex flex-col"
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          style={{ fontFamily: 'EnduroWeb, sans-serif' }}
+          style={{ fontFamily: 'EnduroWeb, sans-serif', height: '100vh' }}
         >
           <form onSubmit={handleSubmit} className="flex flex-col h-full">
             {/* Sticky Header */}
@@ -508,6 +529,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
           </form>
         </motion.div>
       </>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

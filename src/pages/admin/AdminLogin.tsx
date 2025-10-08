@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import pb from '../../config/pocketbase';
@@ -10,6 +10,15 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isMountedRef = useRef(true);
+
+  // Track component mount/unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Check if already authenticated
   useEffect(() => {
@@ -20,26 +29,31 @@ export default function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isMountedRef.current) {
+      return;
+    }
+
     setError('');
     setLoading(true);
 
     try {
       // Authenticate with PocketBase (automatically updates authStore)
-      const authData = await pb.collection('users').authWithPassword(email, password);
+      await pb.collection('users').authWithPassword(email, password);
 
-      // Log successful authentication (optional - for debugging)
-      console.log('Authenticated user:', authData.record.id);
-      console.log('Auth token:', pb.authStore.token);
-      console.log('Auth valid:', pb.authStore.isValid);
-
-      // Redirect to dashboard on success
-      navigate('/admin/dashboard');
+      // Only navigate if still mounted
+      if (isMountedRef.current) {
+        navigate('/admin/dashboard');
+      }
     } catch (err: any) {
       console.error('Login error:', err);
-      // PocketBase returns detailed error messages
-      setError(err?.message || 'Failed to login. Please check your credentials.');
-    } finally {
-      setLoading(false);
+
+      // Only update state if still mounted
+      if (isMountedRef.current) {
+        const errorMsg = err?.response?.message || err?.message || 'Failed to login. Please check your credentials.';
+        setError(errorMsg);
+        setLoading(false);
+      }
     }
   };
 

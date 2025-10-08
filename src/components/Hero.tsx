@@ -44,9 +44,10 @@ export default function Hero({ heroImage, heroTitle, isAboutPopupVisible, settin
           }
         }
       `}</style>
-      <section 
+      <section
         id="hero-section"
-        className="relative h-dvh w-full snap-center bg-white flex items-center justify-center overflow-hidden"
+        className="relative w-full snap-center bg-white flex items-center justify-center overflow-hidden"
+        style={{ height: '100vh' }}
       >
       {/* Hero Background Image */}
       <motion.div

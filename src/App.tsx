@@ -94,9 +94,7 @@ function App() {
           }
           return;
         }
-        
-        console.log('Fetching fresh data from PocketBase API...');
-        
+
         // Fetch all data in parallel
         const [projectsResponse, homepageResponse, aboutResponse, settingsResponse] = await Promise.all([
           pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
@@ -155,6 +153,61 @@ function App() {
     // Cleanup function to prevent state updates after unmount
     return () => {
       isCancelled = true;
+    };
+  }, []);
+
+  // Set up realtime subscriptions for automatic cache updates
+  useEffect(() => {
+    // Subscribe to Portfolio_Projects changes
+    pb.collection('Portfolio_Projects').subscribe('*', async () => {
+      // Fetch fresh data
+      const freshProjects = await pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
+        sort: 'Order'
+      });
+
+      // Update cache and state
+      setCachedData('Portfolio_Projects', freshProjects);
+      setProjectsData(freshProjects.map(convertPocketBaseProject));
+    });
+
+    // Subscribe to Homepage changes
+    pb.collection('Homepage').subscribe('*', async () => {
+      const freshHomepage = await pb.collection('Homepage').getFullList<Homepage>({
+        filter: 'Is_Active = true',
+        sort: '-created'
+      });
+
+      setCachedData('Homepage', freshHomepage);
+      setHomepageData(freshHomepage[0] || null);
+    });
+
+    // Subscribe to About changes
+    pb.collection('About').subscribe('*', async () => {
+      const freshAbout = await pb.collection('About').getFullList<About>({
+        filter: 'Is_Active = true',
+        sort: '-created'
+      });
+
+      setCachedData('About', freshAbout);
+      setAboutData(freshAbout[0] || null);
+    });
+
+    // Subscribe to Settings changes
+    pb.collection('Settings').subscribe('*', async () => {
+      const freshSettings = await pb.collection('Settings').getFullList<Settings>({
+        sort: '-created'
+      });
+
+      setCachedData('Settings', freshSettings);
+      setSettingsData(freshSettings[0] || null);
+    });
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      pb.collection('Portfolio_Projects').unsubscribe();
+      pb.collection('Homepage').unsubscribe();
+      pb.collection('About').unsubscribe();
+      pb.collection('Settings').unsubscribe();
     };
   }, []);
 
@@ -488,66 +541,91 @@ function App() {
         settingsData={settingsData}
       />
 
-      <main 
-        className="h-dvh overflow-y-scroll snap-y snap-mandatory"
-        style={{ 
-          scrollBehavior: 'smooth',
-          scrollSnapType: 'y mandatory'
-        }}
-      >
-      
-      {/* Hero Section */}
+      {/* Desktop Main Container */}
       {isDesktop ? (
-        <Hero
-          heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : ''}
-          heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
-          isAboutPopupVisible={showAboutPopup}
-          settingsData={settingsData}
-        />
+        <main
+          className="overflow-y-scroll snap-y snap-mandatory"
+          style={{
+            height: '100vh',
+            scrollBehavior: 'smooth',
+            scrollSnapType: 'y mandatory'
+          }}
+        >
+          {/* Desktop Hero Section */}
+          <Hero
+            heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image) : ''}
+            heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
+            isAboutPopupVisible={showAboutPopup}
+            settingsData={settingsData}
+          />
+
+          {/* Desktop Project Sections */}
+          {projectsData.map((project, index) => (
+            <section
+              key={project.title}
+              id={`project-${index}`}
+              className="relative w-full snap-center"
+              style={{ height: '100vh' }}
+            >
+              <MotionCarouselDesktop
+                images={project.images}
+                projectTitle={project.title}
+                settingsData={settingsData}
+                totalSlides={project.images.length + 1}
+                onShowPopup={handleShowPopup}
+                isPopupVisible={showPopup}
+                isAboutPopupVisible={showAboutPopup}
+              />
+            </section>
+          ))}
+
+          {/* Desktop Project Index */}
+          <ProjectIndex projectTitles={projectTitles} settingsData={settingsData} />
+        </main>
       ) : (
-        <HeroMobile
-          heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image_Mobile || homepageData.Hero_Image) : ''}
-          heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
-          isAboutPopupVisible={showAboutPopup}
-          settingsData={settingsData}
-        />
+        /* Mobile/Tablet Main Container */
+        <main
+          className="overflow-y-scroll snap-y snap-mandatory"
+          style={{
+            height: '100lvh',
+            scrollBehavior: 'smooth',
+            scrollSnapType: 'y mandatory'
+          }}
+        >
+          {/* Mobile Hero Section */}
+          <HeroMobile
+            heroImage={homepageData ? getImageUrl(homepageData, homepageData.Hero_Image_Mobile || homepageData.Hero_Image) : ''}
+            heroTitle={homepageData?.Hero_Title || "Creative Strategy and Communication"}
+            isAboutPopupVisible={showAboutPopup}
+            settingsData={settingsData}
+            isMobile={isMobile}
+          />
+
+          {/* Mobile Project Sections */}
+          {projectsData.map((project, index) => (
+            <section
+              key={project.title}
+              id={`project-${index}`}
+              className="relative w-full snap-center"
+              style={{ height: '100lvh' }}
+            >
+              <MotionCarousel
+                images={project.images}
+                projectTitle={project.title}
+                settingsData={settingsData}
+                totalSlides={project.images.length + 2}
+                showTopProgressBar={settingsData?.Show_Top_Progress_Bar ?? true}
+                onShowPopup={handleShowPopup}
+                isPopupVisible={showPopup}
+                isAboutPopupVisible={showAboutPopup}
+              />
+            </section>
+          ))}
+
+          {/* Mobile Project Index */}
+          <ProjectIndex projectTitles={projectTitles} settingsData={settingsData} />
+        </main>
       )}
-
-      {/* Project Sections */}
-      {projectsData.map((project, index) => (
-        <section
-          key={project.title}
-          id={`project-${index}`}
-          className="relative h-dvh w-full snap-center">
-          {isDesktop ? (
-            <MotionCarouselDesktop
-              images={project.images}
-              projectTitle={project.title}
-              settingsData={settingsData}
-              totalSlides={project.images.length + 1}
-              onShowPopup={handleShowPopup}
-              isPopupVisible={showPopup}
-              isAboutPopupVisible={showAboutPopup}
-            />
-          ) : (
-            <MotionCarousel
-              images={project.images}
-              projectTitle={project.title}
-              settingsData={settingsData}
-              totalSlides={project.images.length + 2}
-              showTopProgressBar={settingsData?.Show_Top_Progress_Bar ?? true}
-              onShowPopup={handleShowPopup}
-              isPopupVisible={showPopup}
-              isAboutPopupVisible={showAboutPopup}
-            />
-          )}
-        </section>
-      ))}
-
-      {/* Project Index */}
-      <ProjectIndex projectTitles={projectTitles} settingsData={settingsData} />
-
-      </main>
 
       {/* Global Popup - Positioned relative to viewport */}
       <ProjectPopup 

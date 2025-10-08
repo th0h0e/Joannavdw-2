@@ -16,8 +16,10 @@ export default function LogoBottom({ onClick, isHero, showAboutPopup, showPopup,
   
   return (
     <motion.div
-      className="fixed left-1/2 -translate-x-1/2 cursor-pointer flex items-center justify-center"
-      style={{ 
+      className="fixed cursor-pointer flex items-center justify-center"
+      style={{
+        left: '50%',
+        transform: 'translateX(-50%)',
         zIndex: 9999,
         mixBlendMode: 'exclusion',
         width: containerWidth,

@@ -48,7 +48,7 @@ export default function MotionCarouselDesktop({
       const rawProgress = maxScroll > 0 ? scrollLeft / maxScroll : 0;
       setScrollProgress(rawProgress);
 
-      // Desktop slide detection with left-aligned snapping
+      // Desktop slide detection with center-aligned snapping
       // All regular slides are 50vw (half width)
       // Blur slide is 100vw (full width)
       const halfWidth = containerWidth * 0.5;
@@ -58,8 +58,9 @@ export default function MotionCarouselDesktop({
         setCurrentSlide(totalSlides - 1);
         setIsOnBlurSlide(true);
       } else {
-        // With left-aligned snapping, slide index is simply scroll position / slide width
-        const slideIndex = Math.floor(scrollLeft / halfWidth);
+        // With center-aligned snapping, we need to round to nearest slide
+        // Slide 0 centered at 25vw, Slide 1 centered at 75vw, etc.
+        const slideIndex = Math.round(scrollLeft / halfWidth);
 
         // Cap at last regular image slide
         const actualSlide = Math.min(slideIndex, images.length - 1);
@@ -129,6 +130,8 @@ export default function MotionCarouselDesktop({
           scroll-behavior: smooth;
           scrollbar-width: none;
           -ms-overflow-style: none;
+          /* Reset any inherited scroll snap alignment */
+          scroll-snap-align: none;
         }
 
         .motion-carousel-desktop::-webkit-scrollbar {
@@ -160,7 +163,7 @@ export default function MotionCarouselDesktop({
           flex-shrink: 0;
           min-width: 50vw;
           width: 50vw;
-          scroll-snap-align: start;
+          scroll-snap-align: center;
           scroll-snap-stop: always;
           background-size: cover;
           background-position: center;
@@ -286,8 +289,8 @@ export default function MotionCarouselDesktop({
         <div
           className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-4/5"
           style={{
-            opacity: currentSlide > 0 && currentSlide < images.length - 1 ? 1 : 0,
-            transform: currentSlide > 0 && currentSlide < images.length - 1 ? 'translate(-50%, 0)' : 'translate(-50%, 10px)',
+            opacity: currentSlide > 0 && !isOnBlurSlide ? 1 : 0,
+            transform: currentSlide > 0 && !isOnBlurSlide ? 'translate(-50%, 0)' : 'translate(-50%, 10px)',
             transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
             pointerEvents: currentSlide > 0 ? 'auto' : 'none'
           }}

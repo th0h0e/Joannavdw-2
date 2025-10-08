@@ -10,9 +10,10 @@ type HeroProps = {
   heroTitle: string;
   isAboutPopupVisible: boolean;
   settingsData: Settings | null;
+  isMobile?: boolean;
 };
 
-export default function HeroMobile({ heroImage, heroTitle, isAboutPopupVisible, settingsData }: HeroProps) {
+export default function HeroMobile({ heroImage, heroTitle, isAboutPopupVisible, settingsData, isMobile = true }: HeroProps) {
   const fontSizes = getResponsiveFontSizes(settingsData);
   const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
 
@@ -46,7 +47,8 @@ export default function HeroMobile({ heroImage, heroTitle, isAboutPopupVisible, 
       `}</style>
       <section
         id="hero-section"
-        className="relative h-dvh w-full snap-center bg-white flex items-center justify-center overflow-hidden"
+        className="relative w-full snap-center bg-white flex items-center justify-center overflow-hidden"
+        style={{ height: isMobile ? '100lvh' : '100vh' }}
       >
       {/* Hero Background Image */}
       <motion.div

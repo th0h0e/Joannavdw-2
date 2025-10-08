@@ -8,7 +8,11 @@ type ProjectIndexProps = {
 
 export default function ProjectIndex({ projectTitles, settingsData = null }: ProjectIndexProps) {
   return (
-    <section id="project-index" className="h-dvh w-full snap-center bg-white flex items-center justify-center">
+    <section
+      id="project-index"
+      className="w-full snap-center bg-white flex items-center justify-center"
+      style={{ height: '100lvh' }}
+    >
       <ProjectNavigation projectTitles={projectTitles} settingsData={settingsData} />
     </section>
   );

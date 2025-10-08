@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, Reorder } from 'motion/react';
-import pb, { getImageUrl, clearCache } from '../../config/pocketbase';
+import pb, { getImageUrl } from '../../config/pocketbase';
 import type { PortfolioProject, Homepage } from '../../config/pocketbase';
 import ProjectEditor from '../../components/admin/ProjectEditor';
 import SettingsSidebar from '../../components/admin/SettingsSidebar';
@@ -37,7 +37,8 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
-        sort: 'Order'
+        sort: 'Order',
+        requestKey: null // Disable auto-cancellation
       });
       setProjects(response);
       setError(null);
@@ -80,7 +81,9 @@ export default function AdminDashboard() {
   // Fetch hero image
   const fetchHeroImage = async () => {
     try {
-      const homepage = await pb.collection('Homepage').getFirstListItem<Homepage>('Is_Active = true');
+      const homepage = await pb.collection('Homepage').getFirstListItem<Homepage>('Is_Active = true', {
+        requestKey: null // Disable auto-cancellation
+      });
       if (homepage) {
         if (homepage.Hero_Image) {
           const imageUrl = getImageUrl(homepage, homepage.Hero_Image);
@@ -109,9 +112,6 @@ export default function AdminDashboard() {
 
       await pb.collection('Homepage').update(homepageId, formData);
 
-      // Clear cache so frontend shows updated image immediately
-      clearCache('Homepage');
-
       // Refresh hero image
       await fetchHeroImage();
     } catch (err: any) {
@@ -130,9 +130,6 @@ export default function AdminDashboard() {
       formData.append('Hero_Image_Mobile', file);
 
       await pb.collection('Homepage').update(homepageId, formData);
-
-      // Clear cache so frontend shows updated image immediately
-      clearCache('Homepage');
 
       // Refresh hero image
       await fetchHeroImage();
@@ -168,9 +165,6 @@ export default function AdminDashboard() {
         Hero_Title: tempTitle.trim()
       });
 
-      // Clear cache so frontend shows updated title immediately
-      clearCache('Homepage');
-
       setHeroTitle(tempTitle.trim());
       setIsEditingTitle(false);
     } catch (err: any) {
@@ -190,9 +184,6 @@ export default function AdminDashboard() {
 
     try {
       await pb.collection('Portfolio_Projects').delete(projectId);
-
-      // Clear cache so frontend shows updated data immediately
-      clearCache('Portfolio_Projects');
 
       await fetchProjects();
     } catch (err: any) {
@@ -237,11 +228,6 @@ export default function AdminDashboard() {
       });
 
       await Promise.all(updatePromises);
-
-      // Clear cache so frontend shows updated order immediately
-      clearCache('Portfolio_Projects');
-
-      console.log('Projects reordered successfully');
     } catch (err: any) {
       console.error('Error reordering projects:', err);
 
@@ -257,7 +243,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-xl text-white">Loading...</div>
       </div>
     );
@@ -265,7 +251,7 @@ export default function AdminDashboard() {
 
   return (
     <motion.div
-      className="min-h-screen bg-neutral-900"
+      className="min-h-screen bg-black"
       style={{ fontFamily: 'EnduroWeb, sans-serif' }}
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
@@ -273,7 +259,7 @@ export default function AdminDashboard() {
       transition={{ duration: 0.4, ease: 'easeInOut' }}
     >
       {/* Header */}
-      <header className="border-b border-neutral-800/70 backdrop-blur-sm bg-neutral-900/80 sticky top-0 z-10">
+      <header className="border-b border-neutral-800/70 backdrop-blur-sm bg-black/80 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6 flex justify-between items-center">
           <div>
             <h1 className="text-xl font-medium text-white tracking-tight">
@@ -625,13 +611,10 @@ export default function AdminDashboard() {
 
               {/* Content */}
               <div className="flex-1 min-w-0 p-5">
-                <div className="flex items-baseline gap-3 mb-2">
+                <div className="mb-2">
                   <h3 className="font-semibold text-base text-white tracking-tight">
                     {project.Title}
                   </h3>
-                  <span className="text-xs text-neutral-500 uppercase tracking-widest flex-shrink-0 font-medium">
-                    #{project.Order}
-                  </span>
                 </div>
                 <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed mb-3">
                   {project.Description}
