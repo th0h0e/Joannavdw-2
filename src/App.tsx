@@ -546,7 +546,7 @@ function App() {
         <main
           className="overflow-y-scroll snap-y snap-mandatory"
           style={{
-            height: '100vh',
+            height: '100lvh',
             scrollBehavior: 'smooth',
             scrollSnapType: 'y mandatory'
           }}
@@ -565,7 +565,7 @@ function App() {
               key={project.title}
               id={`project-${index}`}
               className="relative w-full snap-center"
-              style={{ height: '100vh' }}
+              style={{ height: '100lvh' }}
             >
               <MotionCarouselDesktop
                 images={project.images}
