@@ -303,9 +303,11 @@ export default function MotionCarousel({
               >
                 {/* Down Chevron */}
                 <div
-                  className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[100] cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
+                  className="absolute bottom-5 left-1/2 z-[100] cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
                   style={{
-                    opacity: Math.pow(blurIntensity, 2)
+                    opacity: Math.pow(blurIntensity, 2),
+                    transform: 'translateX(-50%) translateZ(0)',
+                    willChange: 'transform, opacity'
                   }}
                 >
                   <ChevronDown
