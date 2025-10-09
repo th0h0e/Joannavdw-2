@@ -277,7 +277,7 @@ export default function MotionCarouselDesktop({
       {/* Progress Bar & Chevron Down Container - Desktop */}
       {images.length > 1 && (
         <div
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 w-4/5"
+          className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 w-4/5"
           style={{
             transform: 'translate(-50%, 0) translateZ(0)',
             willChange: 'transform'
