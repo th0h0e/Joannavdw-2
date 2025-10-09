@@ -241,17 +241,7 @@ export default function MotionCarouselDesktop({
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
               zIndex: 1
-            }}>
-              {/* Down Chevron */}
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[100] cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto">
-                <ChevronDown
-                  width={28}
-                  height={28}
-                  color="white"
-                  className="drop-shadow-2xl"
-                />
-              </div>
-            </div>
+            }} />
           </div>
         </div>
       </div>
@@ -284,23 +274,48 @@ export default function MotionCarouselDesktop({
         </h1>
       </div>
 
-      {/* Progress Bar (Bottom) - Desktop */}
+      {/* Progress Bar & Chevron Down Container - Desktop */}
       {images.length > 1 && (
-        <div
-          className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-4/5"
-          style={{
-            opacity: currentSlide > 0 && !isOnBlurSlide ? 1 : 0,
-            transform: currentSlide > 0 && !isOnBlurSlide ? 'translate(-50%, 0)' : 'translate(-50%, 10px)',
-            transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
-            pointerEvents: currentSlide > 0 ? 'auto' : 'none'
-          }}
-        >
-          <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
-            <div
-              className="h-full bg-gray-50"
-              style={{
-                width: `${scrollProgress * 100}%`
-              }}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-4/5 flex items-center justify-center">
+          {/* Progress Bar - slides down when disappearing */}
+          <div
+            style={{
+              opacity: currentSlide > 0 && !isOnBlurSlide ? 1 : 0,
+              transform: !isOnBlurSlide ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
+              pointerEvents: currentSlide > 0 && !isOnBlurSlide ? 'auto' : 'none',
+              position: 'absolute',
+              width: '100%'
+            }}
+          >
+            <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className="h-full bg-gray-50"
+                style={{
+                  width: `${scrollProgress * 100}%`
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Chevron Down - slides down from above when appearing */}
+          <div
+            style={{
+              opacity: isOnBlurSlide ? 1 : 0,
+              transform: isOnBlurSlide ? 'translateY(0)' : 'translateY(-10px)',
+              transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
+              pointerEvents: isOnBlurSlide ? 'auto' : 'none',
+              cursor: 'pointer',
+              position: 'absolute'
+            }}
+            onClick={scrollToNextSection}
+            className="hover:opacity-70 transition-opacity duration-300"
+          >
+            <ChevronDown
+              width={28}
+              height={28}
+              color="white"
+              className="drop-shadow-2xl"
             />
           </div>
         </div>
