@@ -1,4 +1,4 @@
-# Build stage
+# Build stage - updated for Coolify health check
 FROM node:20-alpine AS builder
 
 WORKDIR /app
