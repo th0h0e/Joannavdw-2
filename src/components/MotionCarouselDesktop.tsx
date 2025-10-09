@@ -276,12 +276,18 @@ export default function MotionCarouselDesktop({
 
       {/* Progress Bar & Chevron Down Container - Desktop */}
       {images.length > 1 && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-4/5">
+        <div
+          className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-4/5"
+          style={{
+            transform: 'translate(-50%, 0) translateZ(0)',
+            willChange: 'transform'
+          }}
+        >
           {/* Progress Bar - slides down when disappearing */}
           <div
             style={{
               opacity: currentSlide > 0 && !isOnBlurSlide ? 1 : 0,
-              transform: !isOnBlurSlide ? 'translateY(0)' : 'translateY(10px)',
+              transform: !isOnBlurSlide ? 'translateY(0) translateZ(0)' : 'translateY(10px) translateZ(0)',
               transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
               pointerEvents: currentSlide > 0 && !isOnBlurSlide ? 'auto' : 'none',
               width: '100%'
@@ -302,7 +308,7 @@ export default function MotionCarouselDesktop({
             className="absolute left-1/2 -translate-x-1/2 top-0"
             style={{
               opacity: isOnBlurSlide ? 1 : 0,
-              transform: isOnBlurSlide ? 'translate(-50%, 0)' : 'translate(-50%, -10px)',
+              transform: isOnBlurSlide ? 'translate(-50%, 0) translateZ(0)' : 'translate(-50%, -10px) translateZ(0)',
               transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
               pointerEvents: isOnBlurSlide ? 'auto' : 'none',
               cursor: 'pointer'
