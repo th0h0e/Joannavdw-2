@@ -274,7 +274,7 @@ export default function MotionCarouselDesktop({
         </h1>
       </div>
 
-      {/* Progress Bar & Chevron Down Container - Desktop */}
+      {/* Progress Bar - Desktop */}
       {images.length > 1 && (
         <div
           className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 w-4/5"
@@ -302,13 +302,23 @@ export default function MotionCarouselDesktop({
               />
             </div>
           </div>
+        </div>
+      )}
 
+      {/* Chevron Down - Desktop */}
+      {images.length > 1 && (
+        <div
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20"
+          style={{
+            transform: 'translate(-50%, 0) translateZ(0)',
+            willChange: 'transform'
+          }}
+        >
           {/* Chevron Down - slides down from above when appearing */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 top-0"
             style={{
               opacity: isOnBlurSlide ? 1 : 0,
-              transform: isOnBlurSlide ? 'translate(-50%, 0) translateZ(0)' : 'translate(-50%, -10px) translateZ(0)',
+              transform: isOnBlurSlide ? 'translateY(0) translateZ(0)' : 'translateY(-10px) translateZ(0)',
               transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
               pointerEvents: isOnBlurSlide ? 'auto' : 'none',
               cursor: 'pointer'
