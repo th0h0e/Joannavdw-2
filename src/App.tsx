@@ -211,24 +211,61 @@ function App() {
     };
   }, []);
 
-  // Update favicon dynamically when settingsData changes
+  // Update favicon dynamically when settingsData changes with long-lasting cache
   useEffect(() => {
     if (settingsData && settingsData.favicon) {
       const faviconUrl = getImageUrl(settingsData, settingsData.favicon);
+      const cacheKey = 'favicon_cache';
+      const versionKey = 'favicon_version';
 
-      // Add cache-busting parameter to force browser to reload
-      const cacheBustedUrl = `${faviconUrl}?v=${settingsData.updated}`;
+      // Check if we have a cached version
+      const cachedVersion = localStorage.getItem(versionKey);
+      const cachedFavicon = localStorage.getItem(cacheKey);
 
-      // Remove existing favicon links
-      const existingLinks = document.querySelectorAll('link[rel="icon"]');
-      existingLinks.forEach(link => link.remove());
+      const updateFavicon = (dataUrl: string) => {
+        // Remove existing favicon links
+        const existingLinks = document.querySelectorAll('link[rel="icon"]');
+        existingLinks.forEach(link => link.remove());
 
-      // Create new favicon link
-      const faviconLink = document.createElement('link');
-      faviconLink.rel = 'icon';
-      faviconLink.type = 'image/png';
-      faviconLink.href = cacheBustedUrl;
-      document.head.appendChild(faviconLink);
+        // Create new favicon link
+        const faviconLink = document.createElement('link');
+        faviconLink.rel = 'icon';
+        faviconLink.type = 'image/png';
+        faviconLink.href = dataUrl;
+        document.head.appendChild(faviconLink);
+      };
+
+      // If cached version matches current version, use cached favicon
+      if (cachedVersion === settingsData.updated && cachedFavicon) {
+        updateFavicon(cachedFavicon);
+      } else {
+        // Fetch and cache new favicon
+        fetch(faviconUrl)
+          .then(response => response.blob())
+          .then(blob => {
+            // Convert to data URL for caching
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const dataUrl = reader.result as string;
+
+              // Store in localStorage with unlimited duration
+              try {
+                localStorage.setItem(cacheKey, dataUrl);
+                localStorage.setItem(versionKey, settingsData.updated);
+              } catch (error) {
+                console.warn('Failed to cache favicon:', error);
+              }
+
+              updateFavicon(dataUrl);
+            };
+            reader.readAsDataURL(blob);
+          })
+          .catch(error => {
+            console.warn('Failed to load favicon:', error);
+            // Fallback to direct URL without caching
+            updateFavicon(`${faviconUrl}?v=${settingsData.updated}`);
+          });
+      }
     }
   }, [settingsData]);
 
