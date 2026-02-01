@@ -1,16 +1,16 @@
-import { motion, AnimatePresence } from 'motion/react';
-import ProjectCardSVG from '../assets/Project Card/JVDW WEB LIGHT BOX copy.svg';
+import { AnimatePresence, motion } from 'motion/react'
+import ProjectCardSVG from '../assets/Project Card/JVDW WEB LIGHT BOX copy.svg'
 
 // Type for Framer Motion custom CSS properties animation
-type ScaleAnimation = { '--scale': number; opacity: number };
+interface ScaleAnimation { '--scale': number, 'opacity': number }
 
-type ProjectPopupProps = {
-  isVisible: boolean;
-  onClose: () => void;
-  projectTitle: string;
-  projectDescription: string;
-  projectResponsibility: string[];
-};
+interface ProjectPopupProps {
+  isVisible: boolean
+  onClose: () => void
+  projectTitle: string
+  projectDescription: string
+  projectResponsibility: string[]
+}
 
 export default function ProjectPopup({ isVisible, onClose, projectTitle, projectDescription, projectResponsibility }: ProjectPopupProps) {
   return (
@@ -26,69 +26,69 @@ export default function ProjectPopup({ isVisible, onClose, projectTitle, project
             transition={{ duration: 0.3 }}
             onClick={onClose}
           />
-          
+
           {/* Popup */}
           <motion.div
             className="fixed z-50"
-            style={{ 
-              top: '50%', 
-              left: '50%', 
+            style={{
+              top: '50%',
+              left: '50%',
               width: '280px',
               position: 'fixed',
-              transform: 'translate(-50%, -50%) scale(var(--scale, 1))'
+              transform: 'translate(-50%, -50%) scale(var(--scale, 1))',
             }}
-            initial={{ '--scale': 0.8, opacity: 0 } as ScaleAnimation}
-            animate={{ '--scale': 1, opacity: 1 } as ScaleAnimation}
-            exit={{ '--scale': 0.8, opacity: 0 } as ScaleAnimation}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            initial={{ '--scale': 0.8, 'opacity': 0 } as ScaleAnimation}
+            animate={{ '--scale': 1, 'opacity': 1 } as ScaleAnimation}
+            exit={{ '--scale': 0.8, 'opacity': 0 } as ScaleAnimation}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             <div className="relative">
-              <img 
-                src={ProjectCardSVG} 
+              <img
+                src={ProjectCardSVG}
                 alt="Project Card"
                 className="w-full h-auto"
-                style={{ 
-                  width: '280px', 
+                style={{
+                  width: '280px',
                   height: 'auto',
-                  filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15))'
+                  filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15))',
                 }}
               />
-              
+
               {/* Project Content Overlay */}
               <div className="absolute inset-0 flex flex-col justify-center px-4 py-8">
-                <h2 
+                <h2
                   className="text-black uppercase text-center leading-tight"
-                  style={{ 
+                  style={{
                     fontFamily: 'EnduroWeb, sans-serif',
                     letterSpacing: '0.03em',
                     fontSize: '12px',
-                    marginBottom: '18px'
+                    marginBottom: '18px',
                   }}
                 >
                   {projectTitle}
                 </h2>
-                <div 
+                <div
                   className="text-black uppercase text-center leading-tight"
-                  style={{ 
+                  style={{
                     fontFamily: 'EnduroWeb, sans-serif',
                     letterSpacing: '0.03em',
                     fontSize: '12px',
-                    marginBottom: '18px'
+                    marginBottom: '18px',
                   }}
                 >
                   {projectResponsibility.map((responsibility, index) => (
-                    <span key={index}>
+                    <span key={`${responsibility}-${index}`}>
                       {responsibility}
-                      {index < projectResponsibility.length - 1 && <br/>}
+                      {index < projectResponsibility.length - 1 && <br />}
                     </span>
                   ))}
                 </div>
-                <p 
+                <p
                   className="text-black text-center leading-tight"
-                  style={{ 
+                  style={{
                     fontFamily: 'EnduroWeb, sans-serif',
                     letterSpacing: '0.03em',
-                    fontSize: '12px'
+                    fontSize: '12px',
                   }}
                 >
                   {projectDescription}
@@ -99,5 +99,5 @@ export default function ProjectPopup({ isVisible, onClose, projectTitle, project
         </>
       )}
     </AnimatePresence>
-  );
+  )
 }

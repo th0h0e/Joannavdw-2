@@ -1,146 +1,154 @@
-import PocketBase from 'pocketbase';
 import type {
   AboutResponse,
+  BaseSystemFields,
   HomepageResponse,
   PortfolioProjectsResponse,
   SettingsResponse,
-  BaseSystemFields,
-} from '../types/pocketbase-types';
+} from '../types/pocketbase-types'
+import PocketBase from 'pocketbase'
 
 // PocketBase client configuration
-const pb = new PocketBase('https://admin.kontext.site');
+const pb = new PocketBase('https://admin.kontext.site')
 
-export default pb;
+export default pb
 
 // Re-export types with simpler names for use throughout the app
 // Use the Response types with proper generics for JSON fields
 export type PortfolioProject = PortfolioProjectsResponse<string[]> & {
-  Responsibility?: string[]; // Legacy field alias
-};
-export type Homepage = HomepageResponse;
+  Responsibility?: string[] // Legacy field alias
+}
+export type Homepage = HomepageResponse
 export type About = AboutResponse<string[]> & {
-  Client_List?: string[]; // Legacy field alias
-};
-export type Settings = SettingsResponse;
+  Client_List?: string[] // Legacy field alias
+}
+export type Settings = SettingsResponse
 
 // Cache configuration - Long duration for better performance (7 days)
-const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
 // Cache version key for invalidation
-const CACHE_VERSION_KEY = 'pocketbase_cache_version';
+const CACHE_VERSION_KEY = 'pocketbase_cache_version'
 
 // Cache storage interface - using unknown for type safety
 interface CacheEntry {
-  data: unknown;
-  timestamp: number;
-  version: number;
+  data: unknown
+  timestamp: number
+  version: number
 }
 
 // Get current cache version
-const getCacheVersion = (): number => {
+function getCacheVersion(): number {
   try {
-    const version = localStorage.getItem(CACHE_VERSION_KEY);
-    return version ? parseInt(version, 10) : 1;
-  } catch {
-    return 1;
+    const version = localStorage.getItem(CACHE_VERSION_KEY)
+    return version ? Number.parseInt(version, 10) : 1
   }
-};
+  catch {
+    return 1
+  }
+}
 
 // Increment cache version (called when admin updates data)
-const incrementCacheVersion = (): void => {
+function incrementCacheVersion(): void {
   try {
-    const currentVersion = getCacheVersion();
-    localStorage.setItem(CACHE_VERSION_KEY, String(currentVersion + 1));
-  } catch (error) {
-    console.warn('Cache version update error:', error);
+    const currentVersion = getCacheVersion()
+    localStorage.setItem(CACHE_VERSION_KEY, String(currentVersion + 1))
   }
-};
+  catch (error) {
+    console.warn('Cache version update error:', error)
+  }
+}
 
 // Cache storage using localStorage
-const getCacheKey = (collection: string) => `pocketbase_cache_${collection}`;
+const getCacheKey = (collection: string) => `pocketbase_cache_${collection}`
 
-const isValidCache = (timestamp: number, version: number): boolean => {
-  const notExpired = Date.now() - timestamp < CACHE_DURATION;
-  const versionMatches = version === getCacheVersion();
-  return notExpired && versionMatches;
-};
+function isValidCache(timestamp: number, version: number): boolean {
+  const notExpired = Date.now() - timestamp < CACHE_DURATION
+  const versionMatches = version === getCacheVersion()
+  return notExpired && versionMatches
+}
 
-export const getCachedData = <T>(collection: string): T | null => {
+export function getCachedData<T>(collection: string): T | null {
   try {
-    const cached = localStorage.getItem(getCacheKey(collection));
-    if (!cached) return null;
+    const cached = localStorage.getItem(getCacheKey(collection))
+    if (!cached)
+      return null
 
-    const entry: CacheEntry = JSON.parse(cached);
+    const entry: CacheEntry = JSON.parse(cached)
     if (isValidCache(entry.timestamp, entry.version)) {
-      return entry.data as T;
-    } else {
-      // Clean up expired or outdated cache
-      localStorage.removeItem(getCacheKey(collection));
-      return null;
+      return entry.data as T
     }
-  } catch (error) {
-    console.warn('Cache read error:', error);
-    return null;
+    else {
+      // Clean up expired or outdated cache
+      localStorage.removeItem(getCacheKey(collection))
+      return null
+    }
   }
-};
+  catch (error) {
+    console.warn('Cache read error:', error)
+    return null
+  }
+}
 
-export const setCachedData = <T>(collection: string, data: T): void => {
+export function setCachedData<T>(collection: string, data: T): void {
   try {
     const entry: CacheEntry = {
       data,
       timestamp: Date.now(),
-      version: getCacheVersion()
-    };
-    localStorage.setItem(getCacheKey(collection), JSON.stringify(entry));
-  } catch (error) {
-    console.warn('Cache write error:', error);
+      version: getCacheVersion(),
+    }
+    localStorage.setItem(getCacheKey(collection), JSON.stringify(entry))
   }
-};
+  catch (error) {
+    console.warn('Cache write error:', error)
+  }
+}
 
-export const clearCache = (collection?: string): void => {
+export function clearCache(collection?: string): void {
   try {
     if (collection) {
       // Increment version to invalidate all caches
-      incrementCacheVersion();
+      incrementCacheVersion()
       // Also remove specific collection cache immediately
-      localStorage.removeItem(getCacheKey(collection));
-    } else {
-      // Clear all PocketBase caches and increment version
-      incrementCacheVersion();
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('pocketbase_cache_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      localStorage.removeItem(getCacheKey(collection))
     }
-  } catch (error) {
-    console.warn('Cache clear error:', error);
+    else {
+      // Clear all PocketBase caches and increment version
+      incrementCacheVersion()
+      const keys = Object.keys(localStorage)
+      keys.forEach((key) => {
+        if (key.startsWith('pocketbase_cache_')) {
+          localStorage.removeItem(key)
+        }
+      })
+    }
   }
-};
+  catch (error) {
+    console.warn('Cache clear error:', error)
+  }
+}
 
 // Helper function to get image URLs
-export const getImageUrl = (record: BaseSystemFields, filename: string) => {
-  return pb.files.getURL(record, filename);
-};
+export function getImageUrl(record: BaseSystemFields, filename: string) {
+  return pb.files.getURL(record, filename)
+}
 
 // Helper function to generate dynamic project title styles
-export const getProjectTitleStyle = (settings: Settings | null) => {
-  const mobileFontSize = settings?.Mobile_Font_Size ?? 1.25;
+export function getProjectTitleStyle(settings: Settings | null) {
+  const mobileFontSize = settings?.Mobile_Font_Size ?? 1.25
 
   return {
     fontFamily: 'EnduroWeb, sans-serif',
     letterSpacing: '0.03em',
     fontSize: `${mobileFontSize}rem`,
-  };
-};
+  }
+}
 
 // Helper to get responsive font size classes (for CSS-in-JS)
-export const getResponsiveFontSizes = (settings: Settings | null) => {
+export function getResponsiveFontSizes(settings: Settings | null) {
   return {
     mobile: settings?.Mobile_Font_Size ?? 1.25,
     tablet: settings?.Tablet_Font_Size ?? 1.875,
     desktop: settings?.Desktop_Font_Size ?? 2.25,
     largeDesktop: settings?.Large_Desktop_Font_Size ?? 3,
-  };
-};
+  }
+}

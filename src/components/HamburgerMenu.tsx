@@ -1,27 +1,28 @@
-import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import ProjectNavigation from './ProjectNavigation';
-import type { Settings } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase'
+import { AnimatePresence, motion } from 'motion/react'
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import ProjectNavigation from './ProjectNavigation'
 
-type HamburgerMenuProps = {
-  projectTitles: string[];
-  isPopupVisible?: boolean;
-  settingsData?: Settings | null;
-};
+interface HamburgerMenuProps {
+  projectTitles: string[]
+  isPopupVisible?: boolean
+  settingsData?: Settings | null
+}
 
 export default function HamburgerMenu({ projectTitles, isPopupVisible = false, settingsData = null }: HamburgerMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
 
   const toggleMenu = () => {
     // Don't allow opening menu when popups are visible
-    if (isPopupVisible) return;
-    setIsOpen(!isOpen);
-  };
+    if (isPopupVisible)
+      return
+    setIsOpen(!isOpen)
+  }
 
   const closeMenu = () => {
-    setIsOpen(false);
-  };
+    setIsOpen(false)
+  }
 
   return (
     <>
@@ -34,8 +35,8 @@ export default function HamburgerMenu({ projectTitles, isPopupVisible = false, s
         >
           <motion.div
             className="block md:w-[18px] md:h-[18px]"
-            style={{ 
-              mixBlendMode: isOpen ? 'normal' : 'exclusion'
+            style={{
+              mixBlendMode: isOpen ? 'normal' : 'exclusion',
             }}
             animate={{
               rotate: isOpen ? 45 : 0,
@@ -70,39 +71,39 @@ export default function HamburgerMenu({ projectTitles, isPopupVisible = false, s
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
                 style={{ height: '100lvh' }}
               >
                 <div className="w-full flex items-center justify-center">
-                    <ProjectNavigation
-                      projectTitles={projectTitles}
-                      settingsData={settingsData}
-                      onLinkClick={(index) => {
-                        closeMenu();
+                  <ProjectNavigation
+                    projectTitles={projectTitles}
+                    settingsData={settingsData}
+                    onLinkClick={(index) => {
+                      closeMenu()
 
-                        // Navigate after menu closes to avoid state conflicts
+                      // Navigate after menu closes to avoid state conflicts
+                      setTimeout(() => {
+                        window.location.hash = `#project-${index}`
+
+                        // Reset all carousels to first slide after navigation
                         setTimeout(() => {
-                          window.location.hash = `#project-${index}`;
-
-                          // Reset all carousels to first slide after navigation
-                          setTimeout(() => {
-                            const carousels = document.querySelectorAll('[data-carousel]');
-                            carousels.forEach(carousel => {
-                              if (carousel instanceof HTMLElement) {
-                                carousel.scrollLeft = 0;
-                              }
-                            });
-                          }, 100);
-                        }, 300); // Wait for menu close animation
-                      }}
-                    />
+                          const carousels = document.querySelectorAll('[data-carousel]')
+                          carousels.forEach((carousel) => {
+                            if (carousel instanceof HTMLElement) {
+                              carousel.scrollLeft = 0
+                            }
+                          })
+                        }, 100)
+                      }, 300) // Wait for menu close animation
+                    }}
+                  />
                 </div>
               </motion.div>
             </>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </>
-  );
+  )
 }

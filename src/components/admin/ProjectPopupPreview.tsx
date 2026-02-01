@@ -1,10 +1,10 @@
-import ProjectCardSVG from '../../assets/Project Card/JVDW WEB LIGHT BOX copy.svg';
+import ProjectCardSVG from '../../assets/Project Card/JVDW WEB LIGHT BOX copy.svg'
 
-type ProjectPopupPreviewProps = {
-  projectTitle: string;
-  projectDescription: string;
-  projectResponsibility: string[];
-};
+interface ProjectPopupPreviewProps {
+  projectTitle: string
+  projectDescription: string
+  projectResponsibility: string[]
+}
 
 export default function ProjectPopupPreview({ projectTitle, projectDescription, projectResponsibility }: ProjectPopupPreviewProps) {
   return (
@@ -16,7 +16,7 @@ export default function ProjectPopupPreview({ projectTitle, projectDescription, 
         style={{
           width: '280px',
           height: 'auto',
-          filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15))'
+          filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15))',
         }}
       />
 
@@ -28,7 +28,7 @@ export default function ProjectPopupPreview({ projectTitle, projectDescription, 
             fontFamily: 'EnduroWeb, sans-serif',
             letterSpacing: '0.03em',
             fontSize: '12px',
-            marginBottom: '18px'
+            marginBottom: '18px',
           }}
         >
           {projectTitle}
@@ -40,11 +40,11 @@ export default function ProjectPopupPreview({ projectTitle, projectDescription, 
             fontFamily: 'EnduroWeb, sans-serif',
             letterSpacing: '0.03em',
             fontSize: '12px',
-            marginBottom: '18px'
+            marginBottom: '18px',
           }}
         >
           {projectResponsibility.map((responsibility, index) => (
-            <span key={index}>
+            <span key={`${responsibility}-${index}`}>
               {responsibility}
               {index < projectResponsibility.length - 1 && <br />}
             </span>
@@ -56,12 +56,12 @@ export default function ProjectPopupPreview({ projectTitle, projectDescription, 
           style={{
             fontFamily: 'EnduroWeb, sans-serif',
             letterSpacing: '0.03em',
-            fontSize: '12px'
+            fontSize: '12px',
           }}
         >
           {projectDescription}
         </p>
       </div>
     </div>
-  );
+  )
 }

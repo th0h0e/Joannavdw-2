@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import ChevronDown from './icons/ChevronDown';
-import ChevronRight from './icons/ChevronRight';
-import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles';
-import { getResponsiveFontSizes } from '../config/pocketbase';
-import type { ProjectImage } from '../types/project';
-import type { Settings } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase'
+import type { ProjectImage } from '../types/project'
+import { useEffect, useRef, useState } from 'react'
+import { getResponsiveFontSizes } from '../config/pocketbase'
+import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles'
+import ChevronDown from './icons/ChevronDown'
+import ChevronRight from './icons/ChevronRight'
 
-type MotionCarouselDesktopProps = {
-  images: ProjectImage[];
-  projectTitle: string;
-  settingsData?: Settings | null;
-  totalSlides: number;
-  onShowPopup?: (title: string) => void;
-  isPopupVisible?: boolean;
-  isAboutPopupVisible?: boolean;
-};
+interface MotionCarouselDesktopProps {
+  images: ProjectImage[]
+  projectTitle: string
+  settingsData?: Settings | null
+  totalSlides: number
+  onShowPopup?: (title: string) => void
+  isPopupVisible?: boolean
+  isAboutPopupVisible?: boolean
+}
 
 export default function MotionCarouselDesktop({
   images,
@@ -23,101 +23,107 @@ export default function MotionCarouselDesktop({
   totalSlides,
   onShowPopup,
   isPopupVisible = false,
-  isAboutPopupVisible = false
+  isAboutPopupVisible = false,
 }: MotionCarouselDesktopProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isOnBlurSlide, setIsOnBlurSlide] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isOnBlurSlide, setIsOnBlurSlide] = useState(false)
 
-  const fontSizes = getResponsiveFontSizes(settingsData);
-  const lastImage = images[images.length - 1];
+  const fontSizes = getResponsiveFontSizes(settingsData)
+  const lastImage = images[images.length - 1]
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current)
+      return
 
     const handleScroll = () => {
-      const carousel = containerRef.current;
-      if (!carousel) return;
+      const carousel = containerRef.current
+      if (!carousel)
+        return
 
-      const scrollLeft = carousel.scrollLeft;
-      const containerWidth = carousel.offsetWidth;
+      const scrollLeft = carousel.scrollLeft
+      const containerWidth = carousel.offsetWidth
 
       // Calculate raw scroll progress (0 to 1)
-      const maxScroll = carousel.scrollWidth - containerWidth;
-      const rawProgress = maxScroll > 0 ? scrollLeft / maxScroll : 0;
-      setScrollProgress(rawProgress);
+      const maxScroll = carousel.scrollWidth - containerWidth
+      const rawProgress = maxScroll > 0 ? scrollLeft / maxScroll : 0
+      setScrollProgress(rawProgress)
 
       // Desktop slide detection with center-aligned snapping
       // All regular slides are 50vw (half width)
       // Blur slide is 100vw (full width)
-      const halfWidth = containerWidth * 0.5;
+      const halfWidth = containerWidth * 0.5
 
       // Check if we're at the very end (blur slide)
       if (scrollLeft >= maxScroll - 5) {
-        setCurrentSlide(totalSlides - 1);
-        setIsOnBlurSlide(true);
-      } else {
+        setCurrentSlide(totalSlides - 1)
+        setIsOnBlurSlide(true)
+      }
+      else {
         // With center-aligned snapping, we need to round to nearest slide
         // Slide 0 centered at 25vw, Slide 1 centered at 75vw, etc.
-        const slideIndex = Math.round(scrollLeft / halfWidth);
+        const slideIndex = Math.round(scrollLeft / halfWidth)
 
         // Cap at last regular image slide
-        const actualSlide = Math.min(slideIndex, images.length - 1);
-        setCurrentSlide(actualSlide);
-        setIsOnBlurSlide(false);
+        const actualSlide = Math.min(slideIndex, images.length - 1)
+        setCurrentSlide(actualSlide)
+        setIsOnBlurSlide(false)
       }
-    };
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      const carousel = containerRef.current;
-      if (!carousel) return;
+      const carousel = containerRef.current
+      if (!carousel)
+        return
 
-      const containerWidth = carousel.offsetWidth;
-      const halfWidth = containerWidth * 0.5;
+      const containerWidth = carousel.offsetWidth
+      const halfWidth = containerWidth * 0.5
 
       if (e.key === 'ArrowRight' && currentSlide < totalSlides - 1) {
-        e.preventDefault();
-        const nextSlideIndex = currentSlide + 1;
-        const targetScroll = nextSlideIndex * halfWidth;
+        e.preventDefault()
+        const nextSlideIndex = currentSlide + 1
+        const targetScroll = nextSlideIndex * halfWidth
         carousel.scrollTo({
           left: targetScroll,
-          behavior: 'smooth'
-        });
-      } else if (e.key === 'ArrowLeft' && currentSlide > 0) {
-        e.preventDefault();
-        const prevSlideIndex = currentSlide - 1;
-        const targetScroll = prevSlideIndex * halfWidth;
-        carousel.scrollTo({
-          left: targetScroll,
-          behavior: 'smooth'
-        });
+          behavior: 'smooth',
+        })
       }
-    };
+      else if (e.key === 'ArrowLeft' && currentSlide > 0) {
+        e.preventDefault()
+        const prevSlideIndex = currentSlide - 1
+        const targetScroll = prevSlideIndex * halfWidth
+        carousel.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth',
+        })
+      }
+    }
 
-    const carousel = containerRef.current;
-    carousel.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('keydown', handleKeyDown);
+    const carousel = containerRef.current
+    carousel.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('keydown', handleKeyDown)
 
     // Initial calculation
-    handleScroll();
+    handleScroll()
 
     return () => {
-      carousel.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [images.length, totalSlides, currentSlide]);
+      carousel.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [images.length, totalSlides, currentSlide])
 
   const scrollToNextSection = () => {
-    const main = document.querySelector('main');
+    const main = document.querySelector('main')
     if (main) {
-      main.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+      main.scrollBy({ top: window.innerHeight, behavior: 'smooth' })
     }
-  };
+  }
 
   return (
     <>
-      <style>{`
+      <style>
+        {`
         .motion-carousel-desktop {
           position: relative;
           height: 100%;
@@ -197,7 +203,8 @@ export default function MotionCarouselDesktop({
             transform: translateX(-50%) translateY(0);
           }
         }
-      `}</style>
+      `}
+      </style>
 
       <div
         ref={containerRef}
@@ -215,7 +222,7 @@ export default function MotionCarouselDesktop({
           {/* Regular image slides (all images) */}
           {images.map((image, idx) => (
             <div
-              key={`${image.src}-${idx}`}
+              key={image.src}
               className="motion-carousel-desktop__slide"
               style={{ backgroundImage: `url(${image.src})` }}
               role="group"
@@ -240,8 +247,9 @@ export default function MotionCarouselDesktop({
               background: 'rgba(0, 0, 0, 0.3)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
-              zIndex: 1
-            }} />
+              zIndex: 1,
+            }}
+            />
           </div>
         </div>
       </div>
@@ -260,13 +268,14 @@ export default function MotionCarouselDesktop({
             cursor: 'pointer',
             opacity: isPopupVisible || isAboutPopupVisible ? 0 : 1,
             visibility: isPopupVisible || isAboutPopupVisible ? 'hidden' : 'visible',
-            transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out'
+            transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out',
           }}
           onClick={() => {
             if (isOnBlurSlide) {
-              scrollToNextSection();
-            } else {
-              onShowPopup?.(projectTitle);
+              scrollToNextSection()
+            }
+            else {
+              onShowPopup?.(projectTitle)
             }
           }}
         >
@@ -280,7 +289,7 @@ export default function MotionCarouselDesktop({
           className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 w-4/5"
           style={{
             transform: 'translate(-50%, 0) translateZ(0)',
-            willChange: 'transform'
+            willChange: 'transform',
           }}
         >
           {/* Progress Bar - slides down when disappearing */}
@@ -290,14 +299,14 @@ export default function MotionCarouselDesktop({
               transform: !isOnBlurSlide ? 'translateY(0) translateZ(0)' : 'translateY(10px) translateZ(0)',
               transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
               pointerEvents: currentSlide > 0 && !isOnBlurSlide ? 'auto' : 'none',
-              width: '100%'
+              width: '100%',
             }}
           >
             <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
               <div
                 className="h-full bg-gray-50"
                 style={{
-                  width: `${scrollProgress * 100}%`
+                  width: `${scrollProgress * 100}%`,
                 }}
               />
             </div>
@@ -311,7 +320,7 @@ export default function MotionCarouselDesktop({
           className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20"
           style={{
             transform: 'translate(-50%, 0) translateZ(0)',
-            willChange: 'transform'
+            willChange: 'transform',
           }}
         >
           {/* Chevron Down - slides down from above when appearing */}
@@ -321,7 +330,7 @@ export default function MotionCarouselDesktop({
               transform: isOnBlurSlide ? 'translateY(0) translateZ(0)' : 'translateY(-10px) translateZ(0)',
               transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
               pointerEvents: isOnBlurSlide ? 'auto' : 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
             onClick={scrollToNextSection}
           >
@@ -342,20 +351,21 @@ export default function MotionCarouselDesktop({
           style={{ opacity: 1 }}
           aria-label="Next slide"
           onClick={() => {
-            const carousel = containerRef.current;
-            if (!carousel) return;
+            const carousel = containerRef.current
+            if (!carousel)
+              return
 
-            const containerWidth = carousel.offsetWidth;
-            const halfWidth = containerWidth * 0.5;
-            const nextSlideIndex = currentSlide + 1;
+            const containerWidth = carousel.offsetWidth
+            const halfWidth = containerWidth * 0.5
+            const nextSlideIndex = currentSlide + 1
 
             // Calculate exact scroll position for next slide (left-aligned)
-            const targetScroll = nextSlideIndex * halfWidth;
+            const targetScroll = nextSlideIndex * halfWidth
 
             carousel.scrollTo({
               left: targetScroll,
-              behavior: 'smooth'
-            });
+              behavior: 'smooth',
+            })
           }}
         >
           <ChevronRight
@@ -367,5 +377,5 @@ export default function MotionCarouselDesktop({
         </button>
       )}
     </>
-  );
+  )
 }

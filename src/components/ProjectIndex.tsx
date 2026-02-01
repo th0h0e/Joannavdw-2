@@ -1,10 +1,10 @@
-import ProjectNavigation from './ProjectNavigation';
-import type { Settings } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase'
+import ProjectNavigation from './ProjectNavigation'
 
-type ProjectIndexProps = {
-  projectTitles: string[];
-  settingsData?: Settings | null;
-};
+interface ProjectIndexProps {
+  projectTitles: string[]
+  settingsData?: Settings | null
+}
 
 export default function ProjectIndex({ projectTitles, settingsData = null }: ProjectIndexProps) {
   return (
@@ -15,5 +15,5 @@ export default function ProjectIndex({ projectTitles, settingsData = null }: Pro
     >
       <ProjectNavigation projectTitles={projectTitles} settingsData={settingsData} />
     </section>
-  );
+  )
 }

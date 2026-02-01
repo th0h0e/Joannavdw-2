@@ -1,62 +1,63 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import pb from '../../config/pocketbase';
-import loginBackground from '../../assets/admin-login-bg.jpg';
+import { motion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import loginBackground from '../../assets/admin-login-bg.jpg'
+import pb from '../../config/pocketbase'
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const isMountedRef = useRef(true);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const isMountedRef = useRef(true)
 
   // Track component mount/unmount
   useEffect(() => {
-    isMountedRef.current = true;
+    isMountedRef.current = true
     return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+      isMountedRef.current = false
+    }
+  }, [])
 
   // Check if already authenticated
   useEffect(() => {
     if (pb.authStore.isValid) {
-      navigate('/admin/dashboard');
+      navigate('/admin/dashboard')
     }
-  }, [navigate]);
+  }, [navigate])
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!isMountedRef.current) {
-      return;
+      return
     }
 
-    setError('');
-    setLoading(true);
+    setError('')
+    setLoading(true)
 
     try {
       // Authenticate with PocketBase (automatically updates authStore)
-      await pb.collection('users').authWithPassword(email, password);
+      await pb.collection('users').authWithPassword(email, password)
 
       // Only navigate if still mounted
       if (isMountedRef.current) {
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard')
       }
-    } catch (err: unknown) {
-      console.error('Login error:', err);
+    }
+    catch (err: unknown) {
+      console.error('Login error:', err)
 
       // Only update state if still mounted
       if (isMountedRef.current) {
-        const error = err as { response?: { message?: string }; message?: string };
-        const errorMsg = error?.response?.message || error?.message || 'Failed to login. Please check your credentials.';
-        setError(errorMsg);
-        setLoading(false);
+        const error = err as { response?: { message?: string }, message?: string }
+        const errorMsg = error?.response?.message || error?.message || 'Failed to login. Please check your credentials.'
+        setError(errorMsg)
+        setLoading(false)
       }
     }
-  };
+  }
 
   return (
     <motion.div
@@ -73,7 +74,7 @@ export default function AdminLogin() {
         style={{
           backgroundImage: `url(${loginBackground})`,
           filter: 'blur(8px)',
-          transform: 'scale(1.1)'
+          transform: 'scale(1.1)',
         }}
       />
 
@@ -100,7 +101,7 @@ export default function AdminLogin() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
               className="w-full px-4 py-3 bg-neutral-800/60 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:border-neutral-600 placeholder-neutral-500 text-sm transition-all"
               placeholder="admin@example.com"
@@ -115,7 +116,7 @@ export default function AdminLogin() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               className="w-full px-4 py-3 bg-neutral-800/60 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:border-neutral-600 placeholder-neutral-500 text-sm transition-all"
               placeholder="••••••••"
@@ -147,5 +148,5 @@ export default function AdminLogin() {
         </div>
       </div>
     </motion.div>
-  );
+  )
 }

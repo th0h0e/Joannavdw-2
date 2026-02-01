@@ -1,259 +1,273 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, Reorder } from 'motion/react';
-import pb, { getImageUrl } from '../../config/pocketbase';
-import type { PortfolioProject, Homepage } from '../../config/pocketbase';
-import ProjectEditor from '../../components/admin/ProjectEditor';
-import SettingsSidebar from '../../components/admin/SettingsSidebar';
+import type { Homepage, PortfolioProject } from '../../config/pocketbase'
+import { motion, Reorder } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import ProjectEditor from '../../components/admin/ProjectEditor'
+import SettingsSidebar from '../../components/admin/SettingsSidebar'
+import pb, { getImageUrl } from '../../config/pocketbase'
 
 export default function AdminDashboard() {
-  const [projects, setProjects] = useState<PortfolioProject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editingProject, setEditingProject] = useState<PortfolioProject | null>(null);
-  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
-  const [heroImage, setHeroImage] = useState<string>('');
-  const [heroImageMobile, setHeroImageMobile] = useState<string>('');
-  const [heroTitle, setHeroTitle] = useState<string>('');
-  const [homepageId, setHomepageId] = useState<string>('');
-  const [showSettings, setShowSettings] = useState(false);
-  const [showMobilePreview, setShowMobilePreview] = useState(false);
-  const [isReordering, setIsReordering] = useState(false);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [tempTitle, setTempTitle] = useState<string>('');
-  const heroFileInputRef = useRef<HTMLInputElement>(null);
-  const heroMobileFileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
+  const [projects, setProjects] = useState<PortfolioProject[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [editingProject, setEditingProject] = useState<PortfolioProject | null>(null)
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false)
+  const [heroImage, setHeroImage] = useState<string>('')
+  const [heroImageMobile, setHeroImageMobile] = useState<string>('')
+  const [heroTitle, setHeroTitle] = useState<string>('')
+  const [homepageId, setHomepageId] = useState<string>('')
+  const [showSettings, setShowSettings] = useState(false)
+  const [showMobilePreview, setShowMobilePreview] = useState(false)
+  const [isReordering, setIsReordering] = useState(false)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [tempTitle, setTempTitle] = useState<string>('')
+  const heroFileInputRef = useRef<HTMLInputElement>(null)
+  const heroMobileFileInputRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   // Check authentication
   useEffect(() => {
     if (!pb.authStore.isValid) {
-      navigate('/admin');
+      navigate('/admin')
     }
-  }, [navigate]);
-
-  // Fetch projects
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const response = await pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
-        sort: 'Order',
-        requestKey: null // Disable auto-cancellation
-      });
-      setProjects(response);
-      setError(null);
-    } catch (err: unknown) {
-      console.error('Error fetching projects:', err);
-
-      // Check if error is due to authentication
-      const error = err as { status?: number };
-      if (error?.status === 401 || error?.status === 403) {
-        pb.authStore.clear();
-        navigate('/admin');
-        return;
-      }
-
-      setError('Failed to load projects');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProjects();
-    fetchHeroImage();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Handle swipe gesture
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { velocity: { x: number }; offset: { x: number } }) => {
-    const swipeVelocityThreshold = 500;
-    const swipeOffsetThreshold = 50;
-
-    // Detect swipe based on velocity or offset
-    if (info.velocity.x < -swipeVelocityThreshold || info.offset.x < -swipeOffsetThreshold) {
-      // Swiped left - show mobile preview
-      setShowMobilePreview(true);
-    } else if (info.velocity.x > swipeVelocityThreshold || info.offset.x > swipeOffsetThreshold) {
-      // Swiped right - hide mobile preview
-      setShowMobilePreview(false);
-    }
-  };
+  }, [navigate])
 
   // Fetch hero image
   const fetchHeroImage = async () => {
     try {
       const homepage = await pb.collection('Homepage').getFirstListItem<Homepage>('Is_Active = true', {
-        requestKey: null // Disable auto-cancellation
-      });
+        requestKey: null, // Disable auto-cancellation
+      })
       if (homepage) {
         if (homepage.Hero_Image) {
-          const imageUrl = getImageUrl(homepage, homepage.Hero_Image);
-          setHeroImage(imageUrl);
+          const imageUrl = getImageUrl(homepage, homepage.Hero_Image)
+          setHeroImage(imageUrl)
         }
         if (homepage.Hero_Image_Mobile) {
-          const imageUrlMobile = getImageUrl(homepage, homepage.Hero_Image_Mobile);
-          setHeroImageMobile(imageUrlMobile);
+          const imageUrlMobile = getImageUrl(homepage, homepage.Hero_Image_Mobile)
+          setHeroImageMobile(imageUrlMobile)
         }
-        setHeroTitle(homepage.Hero_Title || '');
-        setHomepageId(homepage.id);
+        setHeroTitle(homepage.Hero_Title || '')
+        setHomepageId(homepage.id)
       }
-    } catch (err) {
-      console.error('Error fetching hero image:', err);
     }
-  };
+    catch (err) {
+      console.error('Error fetching hero image:', err)
+    }
+  }
+
+  // Fetch projects
+  const fetchProjects = async () => {
+    try {
+      setLoading(true)
+      const response = await pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
+        sort: 'Order',
+        requestKey: null, // Disable auto-cancellation
+      })
+      setProjects(response)
+      setError(null)
+    }
+    catch (err: unknown) {
+      console.error('Error fetching projects:', err)
+
+      // Check if error is due to authentication
+      const error = err as { status?: number }
+      if (error?.status === 401 || error?.status === 403) {
+        pb.authStore.clear()
+        navigate('/admin')
+        return
+      }
+
+      setError('Failed to load projects')
+    }
+    finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchProjects()
+    fetchHeroImage()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Handle swipe gesture
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { velocity: { x: number }, offset: { x: number } }) => {
+    const swipeVelocityThreshold = 500
+    const swipeOffsetThreshold = 50
+
+    // Detect swipe based on velocity or offset
+    if (info.velocity.x < -swipeVelocityThreshold || info.offset.x < -swipeOffsetThreshold) {
+      // Swiped left - show mobile preview
+      setShowMobilePreview(true)
+    }
+    else if (info.velocity.x > swipeVelocityThreshold || info.offset.x > swipeOffsetThreshold) {
+      // Swiped right - hide mobile preview
+      setShowMobilePreview(false)
+    }
+  }
 
   // Handle hero image update
   const handleHeroImageUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !homepageId) return;
+    const file = event.target.files?.[0]
+    if (!file || !homepageId)
+      return
 
     try {
-      const formData = new FormData();
-      formData.append('Hero_Image', file);
+      const formData = new FormData()
+      formData.append('Hero_Image', file)
 
-      await pb.collection('Homepage').update(homepageId, formData);
+      await pb.collection('Homepage').update(homepageId, formData)
 
       // Refresh hero image
-      await fetchHeroImage();
-    } catch (err: unknown) {
-      console.error('Error updating hero image:', err);
-      const error = err as { message?: string };
-      alert('Failed to update hero image: ' + (error?.message || 'Unknown error'));
+      await fetchHeroImage()
     }
-  };
+    catch (err: unknown) {
+      console.error('Error updating hero image:', err)
+      const error = err as { message?: string }
+      alert(`Failed to update hero image: ${error?.message || 'Unknown error'}`)
+    }
+  }
 
   // Handle mobile hero image update
   const handleHeroImageMobileUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !homepageId) return;
+    const file = event.target.files?.[0]
+    if (!file || !homepageId)
+      return
 
     try {
-      const formData = new FormData();
-      formData.append('Hero_Image_Mobile', file);
+      const formData = new FormData()
+      formData.append('Hero_Image_Mobile', file)
 
-      await pb.collection('Homepage').update(homepageId, formData);
+      await pb.collection('Homepage').update(homepageId, formData)
 
       // Refresh hero image
-      await fetchHeroImage();
-    } catch (err: unknown) {
-      console.error('Error updating mobile hero image:', err);
-      const error = err as { message?: string };
-      alert('Failed to update mobile hero image: ' + (error?.message || 'Unknown error'));
+      await fetchHeroImage()
     }
-  };
+    catch (err: unknown) {
+      console.error('Error updating mobile hero image:', err)
+      const error = err as { message?: string }
+      alert(`Failed to update mobile hero image: ${error?.message || 'Unknown error'}`)
+    }
+  }
 
   const handleLogout = () => {
-    pb.authStore.clear();
-    navigate('/admin');
-  };
+    pb.authStore.clear()
+    navigate('/admin')
+  }
 
   // Handle hero title edit
   const handleTitleClick = () => {
-    setTempTitle(heroTitle);
-    setIsEditingTitle(true);
-  };
+    setTempTitle(heroTitle)
+    setIsEditingTitle(true)
+  }
 
   const handleTitleInput = (e: React.FormEvent<HTMLHeadingElement>) => {
-    setTempTitle(e.currentTarget.textContent || '');
-  };
+    setTempTitle(e.currentTarget.textContent || '')
+  }
 
   const handleTitleSave = async () => {
     if (!homepageId || tempTitle.trim() === heroTitle) {
-      setIsEditingTitle(false);
-      return;
+      setIsEditingTitle(false)
+      return
     }
 
     try {
       await pb.collection('Homepage').update(homepageId, {
-        Hero_Title: tempTitle.trim()
-      });
+        Hero_Title: tempTitle.trim(),
+      })
 
-      setHeroTitle(tempTitle.trim());
-      setIsEditingTitle(false);
-    } catch (err: unknown) {
-      console.error('Error updating hero title:', err);
-      const error = err as { message?: string };
-      alert('Failed to update hero title: ' + (error?.message || 'Unknown error'));
-      setIsEditingTitle(false);
+      setHeroTitle(tempTitle.trim())
+      setIsEditingTitle(false)
     }
-  };
+    catch (err: unknown) {
+      console.error('Error updating hero title:', err)
+      const error = err as { message?: string }
+      alert(`Failed to update hero title: ${error?.message || 'Unknown error'}`)
+      setIsEditingTitle(false)
+    }
+  }
 
   const handleTitleCancel = () => {
-    setIsEditingTitle(false);
-    setTempTitle('');
-  };
+    setIsEditingTitle(false)
+    setTempTitle('')
+  }
 
   const handleDelete = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.'))
+      return
 
     try {
-      await pb.collection('Portfolio_Projects').delete(projectId);
+      await pb.collection('Portfolio_Projects').delete(projectId)
 
-      await fetchProjects();
-    } catch (err: unknown) {
-      console.error('Error deleting project:', err);
+      await fetchProjects()
+    }
+    catch (err: unknown) {
+      console.error('Error deleting project:', err)
 
       // Check if error is due to authentication
-      const error = err as { status?: number; message?: string };
+      const error = err as { status?: number, message?: string }
       if (error?.status === 401 || error?.status === 403) {
-        pb.authStore.clear();
-        navigate('/admin');
-        return;
+        pb.authStore.clear()
+        navigate('/admin')
+        return
       }
 
-      alert('Failed to delete project: ' + (error?.message || 'Unknown error'));
+      alert(`Failed to delete project: ${error?.message || 'Unknown error'}`)
     }
-  };
+  }
 
   const handleSave = async () => {
-    setEditingProject(null);
-    setShowNewProjectForm(false);
-    await fetchProjects();
-  };
+    setEditingProject(null)
+    setShowNewProjectForm(false)
+    await fetchProjects()
+  }
 
   // Handle reorder - called by Reorder.Group
   const handleReorder = async (newOrder: PortfolioProject[]) => {
     // Prevent concurrent reordering
-    if (isReordering) return;
+    if (isReordering)
+      return
 
     // Update local state immediately for visual feedback
-    setProjects(newOrder);
-    setIsReordering(true);
+    setProjects(newOrder)
+    setIsReordering(true)
 
     try {
       // Batch update all projects with new Order values
       // Use requestKey: null to prevent auto-cancellation of parallel requests
       const updatePromises = newOrder.map((project, index) => {
-        const newOrderValue = index + 1; // Order starts at 1
+        const newOrderValue = index + 1 // Order starts at 1
         return pb.collection('Portfolio_Projects').update(project.id, {
-          Order: newOrderValue
+          Order: newOrderValue,
         }, {
-          requestKey: null // Disable auto-cancellation for batch updates
-        });
-      });
+          requestKey: null, // Disable auto-cancellation for batch updates
+        })
+      })
 
-      await Promise.all(updatePromises);
-    } catch (err: unknown) {
-      console.error('Error reordering projects:', err);
+      await Promise.all(updatePromises)
+    }
+    catch (err: unknown) {
+      console.error('Error reordering projects:', err)
 
       // Revert to original order on error
-      await fetchProjects();
+      await fetchProjects()
 
-      const error = err as { message?: string };
-      alert('Failed to reorder projects: ' + (error?.message || 'Unknown error'));
-    } finally {
-      // Re-enable dragging after update completes
-      setIsReordering(false);
+      const error = err as { message?: string }
+      alert(`Failed to reorder projects: ${error?.message || 'Unknown error'}`)
     }
-  };
+    finally {
+      // Re-enable dragging after update completes
+      setIsReordering(false)
+    }
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-xl text-white">Loading...</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -273,7 +287,9 @@ export default function AdminDashboard() {
               Portfolio
             </h1>
             <p className="text-xs text-neutral-500 mt-1 tracking-wide">
-              {projects.length} {projects.length === 1 ? 'project' : 'projects'}
+              {projects.length}
+              {' '}
+              {projects.length === 1 ? 'project' : 'projects'}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -335,7 +351,7 @@ export default function AdminDashboard() {
               <motion.div
                 className="flex-shrink-0"
                 animate={{
-                  width: showMobilePreview ? '66.67%' : '100%'
+                  width: showMobilePreview ? '66.67%' : '100%',
                 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
@@ -365,12 +381,12 @@ export default function AdminDashboard() {
                             onClick={!isEditingTitle ? handleTitleClick : undefined}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleTitleSave();
+                                e.preventDefault()
+                                handleTitleSave()
                               }
                               if (e.key === 'Escape') {
-                                e.preventDefault();
-                                handleTitleCancel();
+                                e.preventDefault()
+                                handleTitleCancel()
                               }
                             }}
                             className={`text-white uppercase leading-none text-4xl outline-none pointer-events-auto inline-block ${
@@ -382,7 +398,7 @@ export default function AdminDashboard() {
                               fontFamily: 'EnduroWeb, sans-serif',
                               letterSpacing: '0.03em',
                             }}
-                            title={!isEditingTitle ? "Click to edit" : undefined}
+                            title={!isEditingTitle ? 'Click to edit' : undefined}
                           >
                             {heroTitle}
                           </h1>
@@ -439,7 +455,7 @@ export default function AdminDashboard() {
                 initial={{ width: '0%', opacity: 0 }}
                 animate={{
                   width: showMobilePreview ? 'calc(33.33% - 24px)' : '0%',
-                  opacity: showMobilePreview ? 1 : 0
+                  opacity: showMobilePreview ? 1 : 0,
                 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 style={{ overflow: 'hidden' }}
@@ -470,12 +486,12 @@ export default function AdminDashboard() {
                             onClick={!isEditingTitle ? handleTitleClick : undefined}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleTitleSave();
+                                e.preventDefault()
+                                handleTitleSave()
                               }
                               if (e.key === 'Escape') {
-                                e.preventDefault();
-                                handleTitleCancel();
+                                e.preventDefault()
+                                handleTitleCancel()
                               }
                             }}
                             className={`text-white uppercase leading-none text-xl outline-none pointer-events-auto inline-block ${
@@ -487,7 +503,7 @@ export default function AdminDashboard() {
                               fontFamily: 'EnduroWeb, sans-serif',
                               letterSpacing: '0.03em',
                             }}
-                            title={!isEditingTitle ? "Click to edit" : undefined}
+                            title={!isEditingTitle ? 'Click to edit' : undefined}
                           >
                             {heroTitle}
                           </h1>
@@ -568,7 +584,7 @@ export default function AdminDashboard() {
           onReorder={handleReorder}
           className="flex flex-col gap-3"
         >
-          {projects.map((project) => (
+          {projects.map(project => (
             <Reorder.Item
               key={project.id}
               value={project}
@@ -576,43 +592,47 @@ export default function AdminDashboard() {
               style={{ position: 'relative' }}
               animate={{
                 scale: 1,
-                boxShadow: "0 2px 4px 0 rgba(0, 0, 0, 0.4)",
+                boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.4)',
                 zIndex: 1,
-                cursor: 'grab'
+                cursor: 'grab',
               }}
               whileDrag={{
                 scale: 1.01,
-                boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)',
                 zIndex: 50,
-                cursor: 'grabbing'
+                cursor: 'grabbing',
               }}
             >
               {/* Thumbnail */}
               <div className="relative w-1/3 bg-neutral-900/80 overflow-hidden flex-shrink-0 border-r border-neutral-800/70 self-stretch">
-                {project.Images && project.Images.length > 0 ? (
-                  <>
-                    <img
-                      src={getImageUrl(project, project.Images[0])}
-                      alt={project.Title}
-                      className="w-full h-full object-cover absolute inset-0"
-                    />
-                    {/* Blur Overlay on Hover */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      whileHover={{
-                        opacity: 1,
-                        transition: { duration: 0.3, ease: "easeIn" }
-                      }}
-                      className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                    />
-                  </>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-neutral-900/50">
-                    <span className="text-neutral-600 text-sm">–</span>
-                  </div>
-                )}
+                {project.Images && project.Images.length > 0
+                  ? (
+                      <>
+                        <img
+                          src={getImageUrl(project, project.Images[0])}
+                          alt={project.Title}
+                          className="w-full h-full object-cover absolute inset-0"
+                        />
+                        {/* Blur Overlay on Hover */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          whileHover={{
+                            opacity: 1,
+                            transition: { duration: 0.3, ease: 'easeIn' },
+                          }}
+                          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                      </>
+                    )
+                  : (
+                      <div className="w-full h-full flex items-center justify-center bg-neutral-900/50">
+                        <span className="text-neutral-600 text-sm">–</span>
+                      </div>
+                    )}
                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-white px-2 py-1 rounded-sm text-xs font-medium tracking-wide">
-                  {project.Images?.length || 0} {project.Images?.length === 1 ? 'image' : 'images'}
+                  {project.Images?.length || 0}
+                  {' '}
+                  {project.Images?.length === 1 ? 'image' : 'images'}
                 </div>
               </div>
 
@@ -628,12 +648,12 @@ export default function AdminDashboard() {
                 </p>
 
                 {/* Responsibilities */}
-                {((project.Responsibility && project.Responsibility.length > 0) ||
-                  (project.Responsibility_json && project.Responsibility_json.length > 0)) && (
+                {((project.Responsibility && project.Responsibility.length > 0)
+                  || (project.Responsibility_json && project.Responsibility_json.length > 0)) && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {(project.Responsibility_json || project.Responsibility || []).map((resp, idx) => (
                       <span
-                        key={idx}
+                        key={`${resp}-${idx}`}
                         className="px-2.5 py-1 bg-neutral-800/70 border border-neutral-700/60 text-neutral-300 rounded-sm text-xs uppercase tracking-wider font-medium backdrop-blur-sm"
                       >
                         {resp}
@@ -698,8 +718,8 @@ export default function AdminDashboard() {
           project={editingProject}
           onSave={handleSave}
           onCancel={() => {
-            setEditingProject(null);
-            setShowNewProjectForm(false);
+            setEditingProject(null)
+            setShowNewProjectForm(false)
           }}
         />
       )}
@@ -710,5 +730,5 @@ export default function AdminDashboard() {
         onClose={() => setShowSettings(false)}
       />
     </motion.div>
-  );
+  )
 }

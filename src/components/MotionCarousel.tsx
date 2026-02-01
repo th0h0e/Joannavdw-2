@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import ChevronDown from './icons/ChevronDown';
-import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles';
-import { getResponsiveFontSizes } from '../config/pocketbase';
-import type { ProjectImage } from '../types/project';
-import type { Settings } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase'
+import type { ProjectImage } from '../types/project'
+import { useEffect, useRef, useState } from 'react'
+import { getResponsiveFontSizes } from '../config/pocketbase'
+import { projectTitleClasses, projectTitleContainerClasses } from '../utils/sharedStyles'
+import ChevronDown from './icons/ChevronDown'
 
-type MotionCarouselProps = {
-  images: ProjectImage[];
-  projectTitle: string;
-  settingsData?: Settings | null;
-  totalSlides: number;
-  showTopProgressBar?: boolean;
-  onShowPopup?: (title: string) => void;
-  isPopupVisible?: boolean;
-  isAboutPopupVisible?: boolean;
-};
+interface MotionCarouselProps {
+  images: ProjectImage[]
+  projectTitle: string
+  settingsData?: Settings | null
+  totalSlides: number
+  showTopProgressBar?: boolean
+  onShowPopup?: (title: string) => void
+  isPopupVisible?: boolean
+  isAboutPopupVisible?: boolean
+}
 
 export default function MotionCarousel({
   images,
@@ -24,111 +24,117 @@ export default function MotionCarousel({
   showTopProgressBar = true,
   onShowPopup,
   isPopupVisible = false,
-  isAboutPopupVisible = false
+  isAboutPopupVisible = false,
 }: MotionCarouselProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isOnBlurSlide, setIsOnBlurSlide] = useState(false);
-  const [blurIntensity, setBlurIntensity] = useState(0); // 0 to 1, how visible the blur slide is
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isOnBlurSlide, setIsOnBlurSlide] = useState(false)
+  const [blurIntensity, setBlurIntensity] = useState(0) // 0 to 1, how visible the blur slide is
 
-  const fontSizes = getResponsiveFontSizes(settingsData);
-  const lastImage = images[images.length - 1];
+  const fontSizes = getResponsiveFontSizes(settingsData)
+  const lastImage = images[images.length - 1]
 
+  /* eslint-disable react-hooks-extra/no-direct-set-state-in-use-effect -- Scroll handler updates state intentionally */
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current)
+      return
 
     // Detect current slide and scroll progress using scroll position
     const handleScroll = () => {
-      const carousel = containerRef.current;
-      if (!carousel) return;
+      const carousel = containerRef.current
+      if (!carousel)
+        return
 
-      const scrollLeft = carousel.scrollLeft;
-      const containerWidth = carousel.offsetWidth;
+      const scrollLeft = carousel.scrollLeft
+      const containerWidth = carousel.offsetWidth
 
       // Calculate raw scroll progress (0 to 1)
-      const maxScroll = carousel.scrollWidth - containerWidth;
-      const rawProgress = maxScroll > 0 ? scrollLeft / maxScroll : 0;
-      setScrollProgress(rawProgress);
+      const maxScroll = carousel.scrollWidth - containerWidth
+      const rawProgress = maxScroll > 0 ? scrollLeft / maxScroll : 0
+      setScrollProgress(rawProgress)
 
       // Mobile/Tablet: Simple calculation
-      const scrollPercentage = rawProgress;
-      const currentIndex = Math.round(scrollPercentage * (totalSlides - 1));
-      const clampedIndex = Math.max(0, Math.min(currentIndex, totalSlides - 1));
+      const scrollPercentage = rawProgress
+      const currentIndex = Math.round(scrollPercentage * (totalSlides - 1))
+      const clampedIndex = Math.max(0, Math.min(currentIndex, totalSlides - 1))
 
-      setCurrentSlide(clampedIndex);
+      setCurrentSlide(clampedIndex)
 
       // Check if we're on the blur slide (last slide)
-      const isBlur = clampedIndex === totalSlides - 1;
-      setIsOnBlurSlide(isBlur);
+      const isBlur = clampedIndex === totalSlides - 1
+      setIsOnBlurSlide(isBlur)
 
       // Calculate blur slide visibility (for progressive blur effect)
       // Find the blur slide element
-      const slides = carousel.querySelectorAll('.motion-carousel__slide');
-      const blurSlide = slides[slides.length - 1] as HTMLElement;
+      const slides = carousel.querySelectorAll('.motion-carousel__slide')
+      const blurSlide = slides[slides.length - 1] as HTMLElement
 
       if (blurSlide) {
-        const blurSlideRect = blurSlide.getBoundingClientRect();
-        const carouselRect = carousel.getBoundingClientRect();
+        const blurSlideRect = blurSlide.getBoundingClientRect()
+        const carouselRect = carousel.getBoundingClientRect()
 
         // Calculate how centered the blur slide is
         // When blur slide is centered (scroll-snapped): 100%
         // When blur slide is just entering from right: 0%
-        const blurSlideLeft = blurSlideRect.left - carouselRect.left;
-        const carouselWidth = carouselRect.width;
-        const slideWidth = blurSlideRect.width;
+        const blurSlideLeft = blurSlideRect.left - carouselRect.left
+        const carouselWidth = carouselRect.width
+        const slideWidth = blurSlideRect.width
 
         // Ideal centered position (where slide would be when scroll-snapped)
-        const idealCenterPosition = (carouselWidth - slideWidth) / 2;
+        const idealCenterPosition = (carouselWidth - slideWidth) / 2
 
         // Calculate distance from center
-        const distanceFromCenter = Math.abs(blurSlideLeft - idealCenterPosition);
+        const distanceFromCenter = Math.abs(blurSlideLeft - idealCenterPosition)
 
         // Maximum distance (when slide is just entering from the right)
-        const maxDistance = carouselWidth - idealCenterPosition;
+        const maxDistance = carouselWidth - idealCenterPosition
 
         // Calculate progress: 0 when entering, 1 when centered
-        let visibility = 0;
+        let visibility = 0
         if (maxDistance > 0) {
-          const rawProgress = 1 - (distanceFromCenter / maxDistance);
+          const rawProgress = 1 - (distanceFromCenter / maxDistance)
 
           // Add delay: blur only starts after slide is 50% scrolled in
-          const delayThreshold = 0.5;
+          const delayThreshold = 0.5
           if (rawProgress > delayThreshold) {
             // Remap progress from [delayThreshold, 1] to [0, 1]
-            visibility = (rawProgress - delayThreshold) / (1 - delayThreshold);
-          } else {
-            visibility = 0;
+            visibility = (rawProgress - delayThreshold) / (1 - delayThreshold)
+          }
+          else {
+            visibility = 0
           }
 
-          visibility = Math.max(0, Math.min(1, visibility));
+          visibility = Math.max(0, Math.min(1, visibility))
         }
 
-        setBlurIntensity(visibility);
+        setBlurIntensity(visibility)
       }
-    };
+    }
 
-    const carousel = containerRef.current;
-    carousel.addEventListener('scroll', handleScroll, { passive: true });
+    const carousel = containerRef.current
+    carousel.addEventListener('scroll', handleScroll, { passive: true })
 
     // Initial calculation
-    handleScroll();
+    handleScroll()
 
     return () => {
-      carousel.removeEventListener('scroll', handleScroll);
-    };
-  }, [images.length, totalSlides]);
+      carousel.removeEventListener('scroll', handleScroll)
+    }
+  }, [images.length, totalSlides])
+  /* eslint-enable react-hooks-extra/no-direct-set-state-in-use-effect */
 
   const scrollToNextSection = () => {
-    const main = document.querySelector('main');
+    const main = document.querySelector('main')
     if (main) {
-      main.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+      main.scrollBy({ top: window.innerHeight, behavior: 'smooth' })
     }
-  };
+  }
 
   return (
     <>
-      <style>{`
+      <style>
+        {`
         .motion-carousel {
           position: relative;
           height: 100%;
@@ -248,7 +254,8 @@ export default function MotionCarousel({
             transform: translateX(-50%) translateY(0);
           }
         }
-      `}</style>
+      `}
+      </style>
 
       <div
         ref={containerRef}
@@ -266,7 +273,7 @@ export default function MotionCarousel({
           {/* Regular image slides (all except last) */}
           {images.slice(0, -1).map((image, idx) => (
             <div
-              key={`${image.src}-${idx}`}
+              key={image.src}
               className="motion-carousel__slide motion-carousel__slide--image"
               style={{ backgroundImage: `url(${image.src})` }}
               role="group"
@@ -295,19 +302,19 @@ export default function MotionCarousel({
                 className="black-blur-div"
                 style={{
                   // Mobile/Tablet: Progressive blur based on scroll
-                  background: `rgba(0, 0, 0, ${0.25 * Math.pow(blurIntensity, 2)})`,
-                  backdropFilter: `blur(${8 * Math.pow(blurIntensity, 2)}px)`,
-                  WebkitBackdropFilter: `blur(${8 * Math.pow(blurIntensity, 2)}px)`,
-                  transition: 'none'
+                  background: `rgba(0, 0, 0, ${0.25 * blurIntensity ** 2})`,
+                  backdropFilter: `blur(${8 * blurIntensity ** 2}px)`,
+                  WebkitBackdropFilter: `blur(${8 * blurIntensity ** 2}px)`,
+                  transition: 'none',
                 }}
               >
                 {/* Down Chevron */}
                 <div
                   className="absolute bottom-5 left-1/2 z-[100] cursor-pointer hover:opacity-70 transition-opacity duration-300 pointer-events-auto"
                   style={{
-                    opacity: Math.pow(blurIntensity, 2),
+                    opacity: blurIntensity ** 2,
                     transform: 'translateX(-50%) translateZ(0)',
-                    willChange: 'transform, opacity'
+                    willChange: 'transform, opacity',
                   }}
                 >
                   <ChevronDown
@@ -337,13 +344,14 @@ export default function MotionCarousel({
             cursor: 'pointer',
             opacity: isPopupVisible || isAboutPopupVisible ? 0 : 1,
             visibility: isPopupVisible || isAboutPopupVisible ? 'hidden' : 'visible',
-            transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out'
+            transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out',
           }}
           onClick={() => {
             if (isOnBlurSlide) {
-              scrollToNextSection();
-            } else {
-              onShowPopup?.(projectTitle);
+              scrollToNextSection()
+            }
+            else {
+              onShowPopup?.(projectTitle)
             }
           }}
         >
@@ -359,14 +367,14 @@ export default function MotionCarousel({
             opacity: currentSlide > 0 && currentSlide <= images.length ? 1 : 0,
             transform: currentSlide > 0 && currentSlide <= images.length ? 'translate(-50%, 0)' : 'translate(-50%, 10px)',
             transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
-            pointerEvents: currentSlide > 0 ? 'auto' : 'none'
+            pointerEvents: currentSlide > 0 ? 'auto' : 'none',
           }}
         >
           <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
             <div
               className="h-full bg-gray-50"
               style={{
-                width: `${scrollProgress * 100}%`
+                width: `${scrollProgress * 100}%`,
               }}
             />
           </div>
@@ -381,14 +389,14 @@ export default function MotionCarousel({
             opacity: currentSlide > 0 && currentSlide <= images.length ? 1 : 0,
             transform: currentSlide > 0 && currentSlide <= images.length ? 'translate(-50%, 0)' : 'translate(-50%, -10px)',
             transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
-            pointerEvents: currentSlide > 0 ? 'auto' : 'none'
+            pointerEvents: currentSlide > 0 ? 'auto' : 'none',
           }}
         >
           <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
             <div
               className="h-full bg-gray-50"
               style={{
-                width: `${scrollProgress * 100}%`
+                width: `${scrollProgress * 100}%`,
               }}
             />
           </div>
@@ -396,5 +404,5 @@ export default function MotionCarousel({
       )}
 
     </>
-  );
+  )
 }

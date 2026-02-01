@@ -1,20 +1,21 @@
-import { navigationContainerClasses, navigationLinkClasses, navigationListClasses } from '../utils/sharedStyles';
-import { getResponsiveFontSizes } from '../config/pocketbase';
-import type { Settings } from '../config/pocketbase';
+import type { Settings } from '../config/pocketbase'
+import { getResponsiveFontSizes } from '../config/pocketbase'
+import { navigationContainerClasses, navigationLinkClasses, navigationListClasses } from '../utils/sharedStyles'
 
-type ProjectNavigationProps = {
-  projectTitles: string[];
-  onLinkClick?: (index: number) => void;
-  settingsData?: Settings | null;
-};
+interface ProjectNavigationProps {
+  projectTitles: string[]
+  onLinkClick?: (index: number) => void
+  settingsData?: Settings | null
+}
 
 export default function ProjectNavigation({ projectTitles, onLinkClick, settingsData = null }: ProjectNavigationProps) {
   // Get dynamic font sizes from settings
-  const fontSizes = getResponsiveFontSizes(settingsData);
+  const fontSizes = getResponsiveFontSizes(settingsData)
 
   return (
     <>
-      <style>{`
+      <style>
+        {`
         .project-navigation__link {
           font-size: ${fontSizes.mobile}rem;
         }
@@ -36,23 +37,25 @@ export default function ProjectNavigation({ projectTitles, onLinkClick, settings
             font-size: ${fontSizes.largeDesktop}rem;
           }
         }
-      `}</style>
+      `}
+      </style>
       <div className={navigationContainerClasses}>
         <ul className={navigationListClasses}>
           {projectTitles.map((title, index) => (
-            <li key={index}>
-              <a 
+            <li key={`${title}-${index}`}>
+              <a
                 href={`#project-${index}`}
                 className={`${navigationLinkClasses} project-navigation__link`}
                 style={{
                   fontFamily: 'EnduroWeb, sans-serif',
-                  letterSpacing: '0.03em'
+                  letterSpacing: '0.03em',
                 }}
                 onClick={(e) => {
                   if (onLinkClick) {
-                    e.preventDefault();
-                    onLinkClick(index);
-                  } else {
+                    e.preventDefault()
+                    onLinkClick(index)
+                  }
+                  else {
                     // Default behavior for ProjectIndex - direct navigation
                   }
                 }}
@@ -64,5 +67,5 @@ export default function ProjectNavigation({ projectTitles, onLinkClick, settings
         </ul>
       </div>
     </>
-  );
+  )
 }
