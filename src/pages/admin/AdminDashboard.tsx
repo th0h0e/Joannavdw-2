@@ -6,6 +6,12 @@ import ProjectEditor from '../../components/admin/ProjectEditor'
 import SettingsSidebar from '../../components/admin/SettingsSidebar'
 import pb, { getImageUrl } from '../../config/pocketbase'
 
+interface Toast {
+  id: string
+  message: string
+  type: 'success' | 'error'
+}
+
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
@@ -17,10 +23,12 @@ export default function AdminDashboard() {
   const [heroTitle, setHeroTitle] = useState<string>('')
   const [homepageId, setHomepageId] = useState<string>('')
   const [showSettings, setShowSettings] = useState(false)
+  const [toasts, setToasts] = useState<Toast[]>([])
   const [showMobilePreview, setShowMobilePreview] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [tempTitle, setTempTitle] = useState<string>('')
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ projectId: string } | null>(null)
   const heroFileInputRef = useRef<HTMLInputElement>(null)
   const heroMobileFileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
@@ -31,6 +39,17 @@ export default function AdminDashboard() {
       navigate('/admin')
     }
   }, [navigate])
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error') => {
+    const id = Date.now().toString()
+    setToasts(prev => [...prev, { id, message, type }])
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id))
+    }, 5000)
+  }
 
   // Fetch hero image
   const fetchHeroImage = async () => {
@@ -125,7 +144,7 @@ export default function AdminDashboard() {
     catch (err: unknown) {
       console.error('Error updating hero image:', err)
       const error = err as { message?: string }
-      alert(`Failed to update hero image: ${error?.message || 'Unknown error'}`)
+      showToast(`Failed to update hero image: ${error?.message || 'Unknown error'}`, 'error')
     }
   }
 
@@ -147,7 +166,7 @@ export default function AdminDashboard() {
     catch (err: unknown) {
       console.error('Error updating mobile hero image:', err)
       const error = err as { message?: string }
-      alert(`Failed to update mobile hero image: ${error?.message || 'Unknown error'}`)
+      showToast(`Failed to update mobile hero image: ${error?.message || 'Unknown error'}`, 'error')
     }
   }
 
@@ -183,7 +202,7 @@ export default function AdminDashboard() {
     catch (err: unknown) {
       console.error('Error updating hero title:', err)
       const error = err as { message?: string }
-      alert(`Failed to update hero title: ${error?.message || 'Unknown error'}`)
+      showToast(`Failed to update hero title: ${error?.message || 'Unknown error'}`, 'error')
       setIsEditingTitle(false)
     }
   }
@@ -193,13 +212,18 @@ export default function AdminDashboard() {
     setTempTitle('')
   }
 
-  const handleDelete = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.'))
+  const handleDelete = (projectId: string) => {
+    setDeleteConfirmation({ projectId })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation)
       return
 
     try {
-      await pb.collection('Portfolio_Projects').delete(projectId)
-
+      await pb.collection('Portfolio_Projects').delete(deleteConfirmation.projectId)
+      showToast('Project deleted successfully', 'success')
+      setDeleteConfirmation(null)
       await fetchProjects()
     }
     catch (err: unknown) {
@@ -213,7 +237,8 @@ export default function AdminDashboard() {
         return
       }
 
-      alert(`Failed to delete project: ${error?.message || 'Unknown error'}`)
+      showToast(`Failed to delete project: ${error?.message || 'Unknown error'}`, 'error')
+      setDeleteConfirmation(null)
     }
   }
 
@@ -254,7 +279,7 @@ export default function AdminDashboard() {
       await fetchProjects()
 
       const error = err as { message?: string }
-      alert(`Failed to reorder projects: ${error?.message || 'Unknown error'}`)
+      showToast(`Failed to reorder projects: ${error?.message || 'Unknown error'}`, 'error')
     }
     finally {
       // Re-enable dragging after update completes
@@ -721,6 +746,7 @@ export default function AdminDashboard() {
             setEditingProject(null)
             setShowNewProjectForm(false)
           }}
+          onShowToast={showToast}
         />
       )}
 
@@ -728,7 +754,68 @@ export default function AdminDashboard() {
       <SettingsSidebar
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+        onShowToast={showToast}
       />
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+        {toasts.map(toast => (
+          <motion.div
+            key={toast.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className={`px-4 py-3 rounded-sm text-sm font-medium backdrop-blur-md pointer-events-auto ${
+              toast.type === 'success'
+                ? 'bg-green-500/20 border border-green-500/40 text-green-200'
+                : 'bg-red-500/20 border border-red-500/40 text-red-200'
+            }`}
+          >
+            {toast.message}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={() => setDeleteConfirmation(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="bg-neutral-900/95 border border-neutral-800/70 rounded-sm p-6 max-w-sm mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-medium text-white mb-2">Delete Project</h3>
+            <p className="text-sm text-neutral-400 mb-6">
+              Are you sure you want to delete this project? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmation(null)}
+                className="flex-1 px-4 py-2.5 bg-neutral-800/70 border border-neutral-700/60 text-neutral-200 rounded-sm text-sm hover:bg-neutral-700/60 hover:text-white font-medium transition-all uppercase tracking-wide"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 bg-red-950/30 text-red-400 rounded-sm text-sm hover:bg-red-900/40 hover:text-red-300 font-medium transition-all uppercase tracking-wide border border-red-900/40 hover:border-red-800/60"
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   )
 }

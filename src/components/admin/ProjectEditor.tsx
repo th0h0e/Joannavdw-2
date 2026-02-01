@@ -9,6 +9,7 @@ interface ProjectEditorProps {
   project: PortfolioProject | null
   onSave: () => void
   onCancel: () => void
+  onShowToast: (message: string, type: 'success' | 'error') => void
 }
 
 interface ImageItem {
@@ -19,7 +20,7 @@ interface ImageItem {
   isExisting: boolean
 }
 
-export default function ProjectEditor({ project, onSave, onCancel }: ProjectEditorProps) {
+export default function ProjectEditor({ project, onSave, onCancel, onShowToast }: ProjectEditorProps) {
   const [title, setTitle] = useState(project?.Title || '')
   const [description, setDescription] = useState(project?.Description || '')
   const [order, setOrder] = useState(project?.Order || 0)
@@ -248,13 +249,13 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
       // Check if error is due to authentication
       const error = err as { status?: number, message?: string }
       if (error?.status === 401 || error?.status === 403) {
-        alert('Your session has expired. Please login again.')
+        onShowToast('Your session has expired. Please login again.', 'error')
         pb.authStore.clear()
         window.location.href = '/admin'
         return
       }
 
-      alert(`Failed to save project: ${error?.message || 'Unknown error'}`)
+      onShowToast(`Failed to save project: ${error?.message || 'Unknown error'}`, 'error')
     }
     finally {
       setLoading(false)

@@ -7,9 +7,10 @@ import AboutPopup from '../AboutPopup'
 interface SettingsSidebarProps {
   isOpen: boolean
   onClose: () => void
+  onShowToast: (message: string, type: 'success' | 'error') => void
 }
 
-export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProps) {
+export default function SettingsSidebar({ isOpen, onClose, onShowToast }: SettingsSidebarProps) {
   const [loading, setLoading] = useState(false)
   const [aboutData, setAboutData] = useState<About | null>(null)
   const [homepageData, setHomepageData] = useState<Homepage | null>(null)
@@ -111,12 +112,12 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
         setFaviconUrl(faviconImageUrl)
       }
 
-      alert('Favicon updated! Please refresh the page to see the changes.')
+      onShowToast('Favicon updated! Please refresh the page to see the changes.', 'success')
     }
     catch (err: unknown) {
       console.error('Error updating favicon:', err)
       const error = err as { message?: string }
-      alert(`Failed to update favicon: ${error?.message || 'Unknown error'}`)
+      onShowToast(`Failed to update favicon: ${error?.message || 'Unknown error'}`, 'error')
     }
   }
 
@@ -153,12 +154,13 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
         })
       }
 
+      onShowToast('Settings saved successfully!', 'success')
       onClose()
     }
     catch (err: unknown) {
       console.error('Error saving settings:', err)
       const error = err as { message?: string }
-      alert(`Failed to save settings: ${error?.message || 'Unknown error'}`)
+      onShowToast(`Failed to save settings: ${error?.message || 'Unknown error'}`, 'error')
     }
     finally {
       setLoading(false)
