@@ -18,7 +18,7 @@ Sentry.init({
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
 
-function AnimatedRoutes() {
+export function AnimatedRoutes() {
   const location = useLocation();
 
   return (

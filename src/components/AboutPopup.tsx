@@ -4,6 +4,9 @@ import Asset7Logo from '../assets/logo svg/Asset 7.svg';
 import Asset11Logo from '../assets/logo svg/Asset 11.svg';
 import type { About } from '../config/pocketbase';
 
+// Type for Framer Motion custom CSS properties animation
+type ScaleAnimation = { '--scale': number; opacity: number };
+
 type AboutPopupProps = {
   isVisible: boolean;
   onClose: () => void;
@@ -40,9 +43,9 @@ export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopup
               position: 'fixed',
               transform: 'translate(-50%, -50%) scale(var(--scale, 1))'
             }}
-            initial={{ '--scale': 0.8, opacity: 0 } as any}
-            animate={{ '--scale': 1, opacity: 1 } as any}
-            exit={{ '--scale': 0.8, opacity: 0 } as any}
+            initial={{ '--scale': 0.8, opacity: 0 } as ScaleAnimation}
+            animate={{ '--scale': 1, opacity: 1 } as ScaleAnimation}
+            exit={{ '--scale': 0.8, opacity: 0 } as ScaleAnimation}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <div className="relative">
@@ -140,7 +143,7 @@ export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopup
                     marginBottom: '18px'
                   }}
                 >
-                  {(aboutData?.Client_List_Json || aboutData?.Client_List) ? (aboutData.Client_List_Json || aboutData.Client_List).join(', ') : 'Ipsum, Dolor, Sit Amet, Consectetur, Adipiscing, Aenean, Mattis, Blandit.'}
+                  {(aboutData?.Client_List_Json || aboutData?.Client_List)?.join(', ') || 'Ipsum, Dolor, Sit Amet, Consectetur, Adipiscing, Aenean, Mattis, Blandit.'}
                 </p>
                 
                 <button 

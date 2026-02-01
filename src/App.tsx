@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import ProjectIndex from './components/ProjectIndex';
 import ProjectPopup from './components/ProjectPopup';
 import AboutPopup from './components/AboutPopup';
@@ -11,6 +11,14 @@ import MotionCarousel from './components/MotionCarousel';
 import MotionCarouselDesktop from './components/MotionCarouselDesktop';
 import pb, { getImageUrl, getCachedData, setCachedData } from './config/pocketbase';
 import type { PortfolioProject, Homepage, About, Settings } from './config/pocketbase';
+
+// Type for converted project data used in the app
+interface ConvertedProject {
+  title: string;
+  description: string;
+  images: { src: string }[];
+  responsibility?: string[];
+}
 
 // Convert PocketBase project to expected format
 const convertPocketBaseProject = (project: PortfolioProject) => ({
@@ -25,7 +33,7 @@ const convertPocketBaseProject = (project: PortfolioProject) => ({
 
 function App() {
   // State for PocketBase data
-  const [projectsData, setProjectsData] = useState<any[]>([]);
+  const [projectsData, setProjectsData] = useState<ConvertedProject[]>([]);
   const [homepageData, setHomepageData] = useState<Homepage | null>(null);
   const [aboutData, setAboutData] = useState<About | null>(null);
   const [settingsData, setSettingsData] = useState<Settings | null>(null);
@@ -276,6 +284,31 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Reset inactive project carousels to first slide using CSS scroll behavior
+  const resetInactiveCarousels = useCallback((currentSectionId: string) => {
+    // Add a small delay to allow the section transition to complete
+    setTimeout(() => {
+      // Get all project sections
+      projectsData.forEach((_, index) => {
+        const sectionId = `project-${index}`;
+
+        // Skip the currently active section
+        if (sectionId === currentSectionId) return;
+
+        // Find the carousel in this section (try both mobile and desktop)
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+
+        const carousel = section.querySelector('.motion-carousel, .motion-carousel-desktop') as HTMLElement;
+        if (!carousel) return;
+
+        // Reset carousel scroll position directly (horizontal only)
+        // This only affects the horizontal scroll of the carousel, not the main page
+        carousel.scrollLeft = 0;
+      });
+    }, 300);
+  }, [projectsData]);
+
   // Track which section is currently visible using IntersectionObserver
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -326,34 +359,7 @@ function App() {
     if (indexSection) observer.observe(indexSection);
 
     return () => observer.disconnect();
-  }, [projectsData.length]);
-
-  // Removed old hint management - now handled by carousel's currentSlide
-
-  // Reset inactive project carousels to first slide using CSS scroll behavior
-  const resetInactiveCarousels = (currentSectionId: string) => {
-    // Add a small delay to allow the section transition to complete
-    setTimeout(() => {
-      // Get all project sections
-      projectsData.forEach((_, index) => {
-        const sectionId = `project-${index}`;
-
-        // Skip the currently active section
-        if (sectionId === currentSectionId) return;
-
-        // Find the carousel in this section (try both mobile and desktop)
-        const section = document.getElementById(sectionId);
-        if (!section) return;
-
-        const carousel = section.querySelector('.motion-carousel, .motion-carousel-desktop') as HTMLElement;
-        if (!carousel) return;
-
-        // Reset carousel scroll position directly (horizontal only)
-        // This only affects the horizontal scroll of the carousel, not the main page
-        carousel.scrollLeft = 0;
-      });
-    }, 300);
-  };
+  }, [projectsData, resetInactiveCarousels]);
 
   // Generate project titles from loaded data
   const projectTitles = projectsData.map(project => project.title);
@@ -520,7 +526,7 @@ function App() {
     return () => {
       observer.disconnect();
     };
-  }, [hasShownMobileHint]);
+  }, [hasShownMobileHint, projectsData.length]);
 
   // Loading state
   if (loading) {

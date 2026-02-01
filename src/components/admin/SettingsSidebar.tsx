@@ -108,9 +108,10 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
       }
 
       alert('Favicon updated! Please refresh the page to see the changes.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating favicon:', err);
-      alert('Failed to update favicon: ' + (err?.message || 'Unknown error'));
+      const error = err as { message?: string };
+      alert('Failed to update favicon: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -148,9 +149,10 @@ export default function SettingsSidebar({ isOpen, onClose }: SettingsSidebarProp
       }
 
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving settings:', err);
-      alert('Failed to save settings: ' + (err?.message || 'Unknown error'));
+      const error = err as { message?: string };
+      alert('Failed to save settings: ' + (error?.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }

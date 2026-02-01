@@ -42,11 +42,12 @@ export default function AdminDashboard() {
       });
       setProjects(response);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching projects:', err);
 
       // Check if error is due to authentication
-      if (err?.status === 401 || err?.status === 403) {
+      const error = err as { status?: number };
+      if (error?.status === 401 || error?.status === 403) {
         pb.authStore.clear();
         navigate('/admin');
         return;
@@ -61,10 +62,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchProjects();
     fetchHeroImage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle swipe gesture
-  const handleDragEnd = (_event: any, info: any) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { velocity: { x: number }; offset: { x: number } }) => {
     const swipeVelocityThreshold = 500;
     const swipeOffsetThreshold = 50;
 
@@ -114,9 +116,10 @@ export default function AdminDashboard() {
 
       // Refresh hero image
       await fetchHeroImage();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating hero image:', err);
-      alert('Failed to update hero image: ' + (err?.message || 'Unknown error'));
+      const error = err as { message?: string };
+      alert('Failed to update hero image: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -133,9 +136,10 @@ export default function AdminDashboard() {
 
       // Refresh hero image
       await fetchHeroImage();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating mobile hero image:', err);
-      alert('Failed to update mobile hero image: ' + (err?.message || 'Unknown error'));
+      const error = err as { message?: string };
+      alert('Failed to update mobile hero image: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -167,9 +171,10 @@ export default function AdminDashboard() {
 
       setHeroTitle(tempTitle.trim());
       setIsEditingTitle(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating hero title:', err);
-      alert('Failed to update hero title: ' + (err?.message || 'Unknown error'));
+      const error = err as { message?: string };
+      alert('Failed to update hero title: ' + (error?.message || 'Unknown error'));
       setIsEditingTitle(false);
     }
   };
@@ -186,17 +191,18 @@ export default function AdminDashboard() {
       await pb.collection('Portfolio_Projects').delete(projectId);
 
       await fetchProjects();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting project:', err);
 
       // Check if error is due to authentication
-      if (err?.status === 401 || err?.status === 403) {
+      const error = err as { status?: number; message?: string };
+      if (error?.status === 401 || error?.status === 403) {
         pb.authStore.clear();
         navigate('/admin');
         return;
       }
 
-      alert('Failed to delete project: ' + (err?.message || 'Unknown error'));
+      alert('Failed to delete project: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -228,13 +234,14 @@ export default function AdminDashboard() {
       });
 
       await Promise.all(updatePromises);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error reordering projects:', err);
 
       // Revert to original order on error
       await fetchProjects();
 
-      alert('Failed to reorder projects: ' + (err?.message || 'Unknown error'));
+      const error = err as { message?: string };
+      alert('Failed to reorder projects: ' + (error?.message || 'Unknown error'));
     } finally {
       // Re-enable dragging after update completes
       setIsReordering(false);

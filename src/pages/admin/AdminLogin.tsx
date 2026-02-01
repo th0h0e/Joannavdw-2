@@ -45,12 +45,13 @@ export default function AdminLogin() {
       if (isMountedRef.current) {
         navigate('/admin/dashboard');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
 
       // Only update state if still mounted
       if (isMountedRef.current) {
-        const errorMsg = err?.response?.message || err?.message || 'Failed to login. Please check your credentials.';
+        const error = err as { response?: { message?: string }; message?: string };
+        const errorMsg = error?.response?.message || error?.message || 'Failed to login. Please check your credentials.';
         setError(errorMsg);
         setLoading(false);
       }

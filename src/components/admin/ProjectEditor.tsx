@@ -234,18 +234,19 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
       }
 
       onSave();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error saving project:', err);
 
       // Check if error is due to authentication
-      if (err?.status === 401 || err?.status === 403) {
+      const error = err as { status?: number; message?: string };
+      if (error?.status === 401 || error?.status === 403) {
         alert('Your session has expired. Please login again.');
         pb.authStore.clear();
         window.location.href = '/admin';
         return;
       }
 
-      alert('Failed to save project: ' + (err?.message || 'Unknown error'));
+      alert('Failed to save project: ' + (error?.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
