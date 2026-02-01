@@ -222,9 +222,9 @@ export default function AdminDashboard() {
 
     try {
       await pb.collection('Portfolio_Projects').delete(deleteConfirmation.projectId)
-      showToast('Project deleted successfully', 'success')
       setDeleteConfirmation(null)
       await fetchProjects()
+      showToast('Project deleted successfully', 'success')
     }
     catch (err: unknown) {
       console.error('Error deleting project:', err)
@@ -243,9 +243,11 @@ export default function AdminDashboard() {
   }
 
   const handleSave = async () => {
+    const isCreating = showNewProjectForm
     setEditingProject(null)
     setShowNewProjectForm(false)
     await fetchProjects()
+    showToast(isCreating ? 'Project created successfully' : 'Project updated successfully', 'success')
   }
 
   // Handle reorder - called by Reorder.Group
