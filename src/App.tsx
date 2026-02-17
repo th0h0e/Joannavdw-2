@@ -1,6 +1,6 @@
 import type { About, Homepage, PortfolioProject, Settings } from './config/pocketbase'
 import { useCallback, useEffect, useState } from 'react'
-import { useScreen } from 'usehooks-ts'
+import { useScreen, useWindowSize } from 'usehooks-ts'
 import AboutPopup from './components/AboutPopup'
 import HamburgerMenu from './components/HamburgerMenu'
 import Hero from './components/Hero'
@@ -63,6 +63,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const screen = useScreen()
+  const { width: windowWidth } = useWindowSize()
 
   // Update responsive states on resize
   useEffect(() => {
@@ -649,7 +650,7 @@ function App() {
                     onShowPopup={handleShowPopup}
                     isPopupVisible={showPopup}
                     isAboutPopupVisible={showAboutPopup}
-                    screenWidth={screen?.width}
+                    screenWidth={windowWidth}
                   />
                 </section>
               ))}
