@@ -9,15 +9,6 @@ import loginBackground from '../../assets/admin-login-bg.jpg'
 import pb from '../../config/pocketbase'
 
 export default function AdminLogin() {
-  const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -69,7 +60,7 @@ export default function AdminLogin() {
 
   return (
     <motion.div
-      className={`min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-neutral-100 dark:bg-neutral-900${isDark ? ' dark' : ''}`}
+      className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-neutral-100"
       style={{ fontFamily: 'EnduroWeb, sans-serif' }}
       initial={{ x: '-100%' }}
       animate={{ x: 0 }}

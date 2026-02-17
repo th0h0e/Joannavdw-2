@@ -13,15 +13,6 @@ import SettingsSidebar from '../../components/admin/SettingsSidebar'
 import pb, { getImageUrl } from '../../config/pocketbase'
 
 export default function AdminDashboard() {
-  const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -297,7 +288,7 @@ export default function AdminDashboard() {
 
   return (
     <motion.div
-      className={`min-h-screen bg-background${isDark ? ' dark' : ''}`}
+      className="min-h-screen bg-background"
       style={{ fontFamily: 'EnduroWeb, sans-serif' }}
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
