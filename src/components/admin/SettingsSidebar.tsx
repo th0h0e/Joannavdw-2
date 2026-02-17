@@ -1,6 +1,9 @@
 import type { About, Homepage, Settings } from '../../config/pocketbase'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import pb, { getImageUrl } from '../../config/pocketbase'
 import AboutPopup from '../AboutPopup'
 
@@ -184,7 +187,7 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-neutral-900/70 backdrop-blur-md z-40"
+            className="fixed inset-0 bg-muted/70 backdrop-blur-md z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -203,7 +206,7 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
 
           {/* Sidebar */}
           <motion.div
-            className="fixed right-0 top-0 h-full w-3/4 md:w-1/2 bg-black/85 backdrop-blur-xl border-l border-neutral-700/60 shadow-2xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-3/4 md:w-1/2 bg-popover backdrop-blur-xl border-l border-border z-50 flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -212,13 +215,13 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
           >
             <form onSubmit={handleSubmit} className="flex flex-col h-full">
               {/* Sticky Header */}
-              <div className="flex-shrink-0 p-8 border-b border-neutral-800/60 flex items-center gap-4 backdrop-blur-sm">
+              <div className="flex-shrink-0 p-8 border-b border-border flex items-center gap-4 backdrop-blur-sm">
                 {/* Header Text */}
                 <div className="flex-1">
-                  <h2 className="text-xl font-medium text-white tracking-tight">
+                  <h2 className="text-xl font-medium text-foreground tracking-tight">
                     Settings
                   </h2>
-                  <p className="text-xs text-neutral-400 mt-1 tracking-wide uppercase">
+                  <p className="text-xs text-muted-foreground mt-1 tracking-wide uppercase">
                     Configure site content
                   </p>
                 </div>
@@ -226,7 +229,7 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
                 {/* Favicon Avatar */}
                 <div
                   onClick={() => faviconFileInputRef.current?.click()}
-                  className="flex-shrink-0 w-12 h-12 rounded-sm bg-white/10 border border-neutral-700/60 hover:border-white/30 cursor-pointer transition-all overflow-hidden group hover:shadow-lg hover:shadow-white/5"
+                  className="flex-shrink-0 w-12 h-12 rounded-sm bg-muted border border-border hover:border-ring/50 cursor-pointer transition-all overflow-hidden group"
                   title="Click to update favicon"
                 >
                   {faviconUrl
@@ -238,7 +241,7 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
                         />
                       )
                     : (
-                        <div className="w-full h-full flex items-center justify-center text-neutral-500 group-hover:text-neutral-400 transition-colors">
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                             <circle cx="8.5" cy="8.5" r="1.5" />
@@ -262,87 +265,83 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
               <div className="flex-1 overflow-y-auto p-8 space-y-8">
                 {/* Hero Section */}
                 <div>
-                  <h3 className="text-sm font-medium text-white mb-4 uppercase tracking-wider">Hero Section</h3>
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
+                  <h3 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">Hero Section</h3>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wider">
                       Hero Title
-                    </label>
-                    <input
-                      type="text"
+                    </Label>
+                    <Input
                       value={heroTitle}
                       onChange={e => setHeroTitle(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                       placeholder="Creative Strategy and Communication"
                     />
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-neutral-700/60"></div>
+                <div className="border-t border-border"></div>
 
                 {/* About Section */}
                 <div>
-                  <h3 className="text-sm font-medium text-white mb-4 uppercase tracking-wider">About Section</h3>
+                  <h3 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">About Section</h3>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-wider">
                         About Description
-                      </label>
+                      </Label>
                       <textarea
                         value={aboutDescription}
                         onChange={e => setAboutDescription(e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all resize-none"
+                        className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-wider">
                         Expertise Description
-                      </label>
+                      </Label>
                       <textarea
                         value={expertiseDescription}
                         onChange={e => setExpertiseDescription(e.target.value)}
                         rows={3}
-                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all resize-none"
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-neutral-300 mb-3 uppercase tracking-wider">
+                      <Label className="text-xs uppercase tracking-wider mb-3">
                         Client List
-                      </label>
+                      </Label>
 
                       <div className="flex gap-2 mb-3">
-                        <input
-                          type="text"
+                        <Input
                           value={newClient}
                           onChange={e => setNewClient(e.target.value)}
                           onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), handleAddClient())}
-                          className="flex-1 px-4 py-2.5 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           placeholder="e.g., NIKE"
                         />
-                        <button
+                        <Button
                           type="button"
+                          variant="secondary"
                           onClick={handleAddClient}
-                          className="px-6 py-3 bg-white text-black rounded-sm text-sm hover:bg-neutral-100 font-medium transition-all uppercase tracking-wide"
                         >
                           Add
-                        </button>
+                        </Button>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
                         {clientList.map((client, idx) => (
                           <div
                             key={`${client}-${idx}`}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800/60 text-neutral-200 rounded-sm text-xs border border-neutral-700/60"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-muted text-foreground rounded-sm text-xs border border-border"
                           >
                             {client}
                             <button
                               type="button"
                               onClick={() => handleRemoveClient(idx)}
-                              className="text-red-400 hover:text-red-300 text-sm transition-colors"
+                              className="text-destructive hover:text-destructive/80 text-sm transition-colors"
                             >
                               ×
                             </button>
@@ -354,68 +353,63 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-neutral-700/60"></div>
+                <div className="border-t border-border"></div>
 
                 {/* Global Settings */}
                 <div>
-                  <h3 className="text-sm font-medium text-white mb-4 uppercase tracking-wider">Global Settings</h3>
+                  <h3 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider">Global Settings</h3>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-wider">
                         Contact Email
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="email"
                         value={contactEmail}
                         onChange={e => setContactEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                         placeholder="hello@example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-neutral-300 mb-2 uppercase tracking-wider">
+                      <Label className="text-xs uppercase tracking-wider mb-2">
                         Font Sizes (rem)
-                      </label>
+                      </Label>
                       <div className="grid grid-cols-4 gap-2">
-                        <div>
-                          <label className="block text-xs text-neutral-400 mb-1">Mobile</label>
-                          <input
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Mobile</Label>
+                          <Input
                             type="number"
                             step="0.125"
                             value={mobileFontSize}
                             onChange={e => setMobileFontSize(Number.parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs text-neutral-400 mb-1">Tablet</label>
-                          <input
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Tablet</Label>
+                          <Input
                             type="number"
                             step="0.125"
                             value={tabletFontSize}
                             onChange={e => setTabletFontSize(Number.parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs text-neutral-400 mb-1">Desktop</label>
-                          <input
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Desktop</Label>
+                          <Input
                             type="number"
                             step="0.125"
                             value={desktopFontSize}
                             onChange={e => setDesktopFontSize(Number.parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs text-neutral-400 mb-1">Large</label>
-                          <input
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Large</Label>
+                          <Input
                             type="number"
                             step="0.125"
                             value={largeDesktopFontSize}
                             onChange={e => setLargeDesktopFontSize(Number.parseFloat(e.target.value))}
-                            className="w-full px-2 py-3 bg-black/30 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-white/20 placeholder-neutral-500 text-sm transition-all"
                           />
                         </div>
                       </div>
@@ -427,13 +421,13 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
                           type="checkbox"
                           checked={showTopProgressBar}
                           onChange={e => setShowTopProgressBar(e.target.checked)}
-                          className="w-4 h-4 bg-black/30 border border-neutral-700/60 rounded-sm text-white focus:ring-1 focus:ring-white/20"
+                          className="w-4 h-4 rounded-sm border border-input bg-background"
                         />
-                        <span className="text-xs font-medium text-neutral-300 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-foreground uppercase tracking-wider">
                           Show Top Progress Bar
                         </span>
                       </label>
-                      <p className="text-xs text-neutral-500 mt-1 ml-7">
+                      <p className="text-xs text-muted-foreground mt-1 ml-7">
                         Display progress bar at top of carousel
                       </p>
                     </div>
@@ -442,21 +436,22 @@ export default function SettingsSidebar({ isOpen, onClose, onShowToast }: Settin
               </div>
 
               {/* Sticky Footer */}
-              <div className="flex-shrink-0 p-8 border-t border-neutral-800/60 flex gap-3 backdrop-blur-sm">
-                <button
+              <div className="flex-shrink-0 p-8 border-t border-border flex gap-3 backdrop-blur-sm">
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 bg-black/30 border border-neutral-700/60 text-neutral-200 rounded-sm text-sm hover:bg-black/50 hover:text-white hover:border-neutral-600/60 font-medium transition-all uppercase tracking-wide"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-6 py-3 bg-white text-black rounded-sm text-sm hover:bg-neutral-100 hover:shadow-lg hover:shadow-white/10 transition-all font-medium tracking-wide uppercase disabled:bg-neutral-600 disabled:text-neutral-400"
+                  className="flex-1"
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
-                </button>
+                </Button>
               </div>
             </form>
           </motion.div>

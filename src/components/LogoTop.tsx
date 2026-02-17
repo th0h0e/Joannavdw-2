@@ -28,7 +28,7 @@ export default function LogoTop({ onClick, isHero, showAboutPopup, showPopup, is
         pointerEvents: showAboutPopup || (showPopup && isMobile) ? 'none' : 'auto',
         transition: 'opacity 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out',
       }}
-      initial={{ top: isHero ? 'calc(50% - 18vh)' : '60px' }}
+      initial={{ top: isHero ? 'calc(50% - 18lvh)' : '60px' }}
       animate={{ top: '60px' }}
       transition={{ duration: 1.2, ease: 'easeOut' }}
       onClick={onClick}

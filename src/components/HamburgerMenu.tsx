@@ -8,9 +8,10 @@ interface HamburgerMenuProps {
   projectTitles: string[]
   isPopupVisible?: boolean
   settingsData?: Settings | null
+  isMobile?: boolean
 }
 
-export default function HamburgerMenu({ projectTitles, isPopupVisible = false, settingsData = null }: HamburgerMenuProps) {
+export default function HamburgerMenu({ projectTitles, isPopupVisible = false, settingsData = null, isMobile = false }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const toggleMenu = () => {
@@ -32,6 +33,7 @@ export default function HamburgerMenu({ projectTitles, isPopupVisible = false, s
           onClick={toggleMenu}
           className="fixed top-[80px] right-5 md:top-[89px] md:right-[40px] z-[10000] cursor-pointer"
           aria-label="Toggle menu"
+          aria-expanded={isOpen}
         >
           <motion.div
             className="block md:w-[18px] md:h-[18px]"
@@ -41,8 +43,8 @@ export default function HamburgerMenu({ projectTitles, isPopupVisible = false, s
             animate={{
               rotate: isOpen ? 45 : 0,
               backgroundColor: isOpen ? '#000000' : '#ffffff',
-              width: isOpen ? '18px' : (window.innerWidth >= 768 ? '18px' : '17.32px'),
-              height: isOpen ? '18px' : (window.innerWidth >= 768 ? '18px' : '17.32px'),
+              width: isOpen ? '18px' : (isMobile ? '17.32px' : '18px'),
+              height: isOpen ? '18px' : (isMobile ? '17.32px' : '18px'),
             }}
             transition={{ duration: 0.3 }}
           />

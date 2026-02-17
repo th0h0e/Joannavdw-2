@@ -28,8 +28,8 @@ export default function LogoBottom({ onClick, isHero, showAboutPopup, showPopup,
         pointerEvents: showAboutPopup || (showPopup && isMobile) ? 'none' : 'auto',
         transition: 'opacity 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out',
       }}
-      initial={{ top: isHero ? '68vh' : 'calc(100vh - 60px - 80px)' }}
-      animate={{ top: 'calc(100vh - 60px - 80px)' }}
+      initial={{ top: isHero ? '68lvh' : 'calc(100lvh - 60px - 80px)' }}
+      animate={{ top: 'calc(100lvh - 60px - 80px)' }}
       transition={{ duration: 1.2, ease: 'easeOut' }}
       onClick={onClick}
     >

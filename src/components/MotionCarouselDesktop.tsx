@@ -73,6 +73,15 @@ export default function MotionCarouselDesktop({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle keyboard navigation when user is typing in an input
+      const activeElement = document.activeElement
+      const isTyping = activeElement instanceof HTMLInputElement
+        || activeElement instanceof HTMLTextAreaElement
+        || activeElement?.getAttribute('contenteditable') === 'true'
+
+      if (isTyping)
+        return
+
       const carousel = containerRef.current
       if (!carousel)
         return

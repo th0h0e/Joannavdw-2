@@ -166,16 +166,18 @@ function App() {
 
   // Set up realtime subscriptions for automatic cache updates
   useEffect(() => {
+    let isCancelled = false
+
     // Subscribe to Portfolio_Projects changes
     pb.collection('Portfolio_Projects').subscribe('*', async () => {
-      // Fetch fresh data
       const freshProjects = await pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
         sort: 'Order',
       })
 
-      // Update cache and state
-      setCachedData('Portfolio_Projects', freshProjects)
-      setProjectsData(freshProjects.map(convertPocketBaseProject))
+      if (!isCancelled) {
+        setCachedData('Portfolio_Projects', freshProjects)
+        setProjectsData(freshProjects.map(convertPocketBaseProject))
+      }
     })
 
     // Subscribe to Homepage changes
@@ -185,8 +187,10 @@ function App() {
         sort: '-created',
       })
 
-      setCachedData('Homepage', freshHomepage)
-      setHomepageData(freshHomepage[0] || null)
+      if (!isCancelled) {
+        setCachedData('Homepage', freshHomepage)
+        setHomepageData(freshHomepage[0] || null)
+      }
     })
 
     // Subscribe to About changes
@@ -196,8 +200,10 @@ function App() {
         sort: '-created',
       })
 
-      setCachedData('About', freshAbout)
-      setAboutData(freshAbout[0] || null)
+      if (!isCancelled) {
+        setCachedData('About', freshAbout)
+        setAboutData(freshAbout[0] || null)
+      }
     })
 
     // Subscribe to Settings changes
@@ -206,12 +212,15 @@ function App() {
         sort: '-created',
       })
 
-      setCachedData('Settings', freshSettings)
-      setSettingsData(freshSettings[0] || null)
+      if (!isCancelled) {
+        setCachedData('Settings', freshSettings)
+        setSettingsData(freshSettings[0] || null)
+      }
     })
 
     // Cleanup subscriptions on unmount
     return () => {
+      isCancelled = true
       pb.collection('Portfolio_Projects').unsubscribe()
       pb.collection('Homepage').unsubscribe()
       pb.collection('About').unsubscribe()
@@ -278,16 +287,6 @@ function App() {
       }
     }
   }, [settingsData])
-
-  // Track window resize for responsive behavior
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Reset inactive project carousels to first slide using CSS scroll behavior
   const resetInactiveCarousels = useCallback((currentSectionId: string) => {
@@ -610,6 +609,7 @@ function App() {
         projectTitles={projectTitles}
         isPopupVisible={showPopup || showAboutPopup}
         settingsData={settingsData}
+        isMobile={isMobile}
       />
 
       {/* Desktop Main Container */}
@@ -690,6 +690,7 @@ function App() {
                     onShowPopup={handleShowPopup}
                     isPopupVisible={showPopup}
                     isAboutPopupVisible={showAboutPopup}
+                    isMobile={isMobile}
                   />
                 </section>
               ))}

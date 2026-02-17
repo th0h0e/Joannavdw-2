@@ -1,6 +1,10 @@
 import { motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import loginBackground from '../../assets/admin-login-bg.jpg'
 import pb from '../../config/pocketbase'
 
@@ -12,7 +16,6 @@ export default function AdminLogin() {
   const navigate = useNavigate()
   const isMountedRef = useRef(true)
 
-  // Track component mount/unmount
   useEffect(() => {
     isMountedRef.current = true
     return () => {
@@ -20,7 +23,6 @@ export default function AdminLogin() {
     }
   }, [])
 
-  // Check if already authenticated
   useEffect(() => {
     if (pb.authStore.isValid) {
       navigate('/admin/dashboard')
@@ -38,10 +40,8 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      // Authenticate with PocketBase (automatically updates authStore)
       await pb.collection('users').authWithPassword(email, password)
 
-      // Only navigate if still mounted
       if (isMountedRef.current) {
         navigate('/admin/dashboard')
       }
@@ -49,7 +49,6 @@ export default function AdminLogin() {
     catch (err: unknown) {
       console.error('Login error:', err)
 
-      // Only update state if still mounted
       if (isMountedRef.current) {
         const error = err as { response?: { message?: string }, message?: string }
         const errorMsg = error?.response?.message || error?.message || 'Failed to login. Please check your credentials.'
@@ -93,49 +92,52 @@ export default function AdminLogin() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-neutral-400 text-xs uppercase tracking-wider">
               Email
-            </label>
-            <input
+            </Label>
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-neutral-800/60 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:border-neutral-600 placeholder-neutral-500 text-sm transition-all"
+              className="bg-neutral-800/60 border-neutral-700/60 text-white placeholder:text-neutral-500 focus-visible:ring-neutral-600"
               placeholder="admin@example.com"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-xs font-medium text-neutral-400 mb-2 uppercase tracking-wider">
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-neutral-400 text-xs uppercase tracking-wider">
               Password
-            </label>
-            <input
+            </Label>
+            <Input
               id="password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-neutral-800/60 border border-neutral-700/60 text-white rounded-sm focus:outline-none focus:ring-1 focus:ring-neutral-600 focus:border-neutral-600 placeholder-neutral-500 text-sm transition-all"
+              className="bg-neutral-800/60 border-neutral-700/60 text-white placeholder:text-neutral-500 focus-visible:ring-neutral-600"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div className="bg-red-950/20 border border-red-800/30 text-red-200 px-4 py-3 rounded-sm text-sm">
-              {error}
-            </div>
+            <Alert variant="destructive" className="bg-red-950/20 border-red-800/30">
+              <AlertDescription className="text-red-200">
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-2.5 bg-black/30 border border-neutral-700/60 text-neutral-200 rounded-sm hover:bg-black/50 hover:text-white hover:border-neutral-600/60 disabled:bg-neutral-600 disabled:text-neutral-500 disabled:cursor-not-allowed transition-all text-sm uppercase tracking-wide"
+            variant="outline"
+            className="w-full border-neutral-700/60 bg-black/30 text-neutral-200 hover:bg-black/50 hover:text-white hover:border-neutral-600/60 disabled:bg-neutral-600 disabled:text-neutral-500 uppercase tracking-wide"
           >
             {loading ? 'Logging in...' : 'Login'}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-6 text-center">

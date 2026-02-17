@@ -2,15 +2,15 @@ import type { Homepage, PortfolioProject } from '../../config/pocketbase'
 import { motion, Reorder } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast, Toaster } from 'sonner'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item'
+import { Skeleton } from '@/components/ui/skeleton'
 import ProjectEditor from '../../components/admin/ProjectEditor'
 import SettingsSidebar from '../../components/admin/SettingsSidebar'
 import pb, { getImageUrl } from '../../config/pocketbase'
-
-interface Toast {
-  id: string
-  message: string
-  type: 'success' | 'error'
-}
 
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<PortfolioProject[]>([])
@@ -23,7 +23,6 @@ export default function AdminDashboard() {
   const [heroTitle, setHeroTitle] = useState<string>('')
   const [homepageId, setHomepageId] = useState<string>('')
   const [showSettings, setShowSettings] = useState(false)
-  const [toasts, setToasts] = useState<Toast[]>([])
   const [showMobilePreview, setShowMobilePreview] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -33,29 +32,16 @@ export default function AdminDashboard() {
   const heroMobileFileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
-  // Check authentication
   useEffect(() => {
     if (!pb.authStore.isValid) {
       navigate('/admin')
     }
   }, [navigate])
 
-  // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error') => {
-    const id = Date.now().toString()
-    setToasts(prev => [...prev, { id, message, type }])
-
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-      setToasts(prev => prev.filter(toast => toast.id !== id))
-    }, 5000)
-  }
-
-  // Fetch hero image
   const fetchHeroImage = async () => {
     try {
       const homepage = await pb.collection('Homepage').getFirstListItem<Homepage>('Is_Active = true', {
-        requestKey: null, // Disable auto-cancellation
+        requestKey: null,
       })
       if (homepage) {
         if (homepage.Hero_Image) {
@@ -75,13 +61,12 @@ export default function AdminDashboard() {
     }
   }
 
-  // Fetch projects
   const fetchProjects = async () => {
     try {
       setLoading(true)
       const response = await pb.collection('Portfolio_Projects').getFullList<PortfolioProject>({
         sort: 'Order',
-        requestKey: null, // Disable auto-cancellation
+        requestKey: null,
       })
       setProjects(response)
       setError(null)
@@ -89,7 +74,6 @@ export default function AdminDashboard() {
     catch (err: unknown) {
       console.error('Error fetching projects:', err)
 
-      // Check if error is due to authentication
       const error = err as { status?: number }
       if (error?.status === 401 || error?.status === 403) {
         pb.authStore.clear()
@@ -110,23 +94,18 @@ export default function AdminDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Handle swipe gesture
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { velocity: { x: number }, offset: { x: number } }) => {
     const swipeVelocityThreshold = 500
     const swipeOffsetThreshold = 50
 
-    // Detect swipe based on velocity or offset
     if (info.velocity.x < -swipeVelocityThreshold || info.offset.x < -swipeOffsetThreshold) {
-      // Swiped left - show mobile preview
       setShowMobilePreview(true)
     }
     else if (info.velocity.x > swipeVelocityThreshold || info.offset.x > swipeOffsetThreshold) {
-      // Swiped right - hide mobile preview
       setShowMobilePreview(false)
     }
   }
 
-  // Handle hero image update
   const handleHeroImageUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !homepageId)
@@ -138,17 +117,16 @@ export default function AdminDashboard() {
 
       await pb.collection('Homepage').update(homepageId, formData)
 
-      // Refresh hero image
       await fetchHeroImage()
+      toast.success('Hero image updated')
     }
     catch (err: unknown) {
       console.error('Error updating hero image:', err)
       const error = err as { message?: string }
-      showToast(`Failed to update hero image: ${error?.message || 'Unknown error'}`, 'error')
+      toast.error(`Failed to update hero image: ${error?.message || 'Unknown error'}`)
     }
   }
 
-  // Handle mobile hero image update
   const handleHeroImageMobileUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !homepageId)
@@ -160,13 +138,13 @@ export default function AdminDashboard() {
 
       await pb.collection('Homepage').update(homepageId, formData)
 
-      // Refresh hero image
       await fetchHeroImage()
+      toast.success('Mobile hero image updated')
     }
     catch (err: unknown) {
       console.error('Error updating mobile hero image:', err)
       const error = err as { message?: string }
-      showToast(`Failed to update mobile hero image: ${error?.message || 'Unknown error'}`, 'error')
+      toast.error(`Failed to update mobile hero image: ${error?.message || 'Unknown error'}`)
     }
   }
 
@@ -175,7 +153,6 @@ export default function AdminDashboard() {
     navigate('/admin')
   }
 
-  // Handle hero title edit
   const handleTitleClick = () => {
     setTempTitle(heroTitle)
     setIsEditingTitle(true)
@@ -198,11 +175,12 @@ export default function AdminDashboard() {
 
       setHeroTitle(tempTitle.trim())
       setIsEditingTitle(false)
+      toast.success('Hero title updated')
     }
     catch (err: unknown) {
       console.error('Error updating hero title:', err)
       const error = err as { message?: string }
-      showToast(`Failed to update hero title: ${error?.message || 'Unknown error'}`, 'error')
+      toast.error(`Failed to update hero title: ${error?.message || 'Unknown error'}`)
       setIsEditingTitle(false)
     }
   }
@@ -224,12 +202,11 @@ export default function AdminDashboard() {
       await pb.collection('Portfolio_Projects').delete(deleteConfirmation.projectId)
       setDeleteConfirmation(null)
       await fetchProjects()
-      showToast('Project deleted successfully', 'success')
+      toast.success('Project deleted successfully')
     }
     catch (err: unknown) {
       console.error('Error deleting project:', err)
 
-      // Check if error is due to authentication
       const error = err as { status?: number, message?: string }
       if (error?.status === 401 || error?.status === 403) {
         pb.authStore.clear()
@@ -237,7 +214,7 @@ export default function AdminDashboard() {
         return
       }
 
-      showToast(`Failed to delete project: ${error?.message || 'Unknown error'}`, 'error')
+      toast.error(`Failed to delete project: ${error?.message || 'Unknown error'}`)
       setDeleteConfirmation(null)
     }
   }
@@ -247,59 +224,71 @@ export default function AdminDashboard() {
     setEditingProject(null)
     setShowNewProjectForm(false)
     await fetchProjects()
-    showToast(isCreating ? 'Project created successfully' : 'Project updated successfully', 'success')
+    toast.success(isCreating ? 'Project created successfully' : 'Project updated successfully')
   }
 
-  // Handle reorder - called by Reorder.Group
   const handleReorder = async (newOrder: PortfolioProject[]) => {
-    // Prevent concurrent reordering
     if (isReordering)
       return
 
-    // Update local state immediately for visual feedback
     setProjects(newOrder)
     setIsReordering(true)
 
     try {
-      // Batch update all projects with new Order values
-      // Use requestKey: null to prevent auto-cancellation of parallel requests
       const updatePromises = newOrder.map((project, index) => {
-        const newOrderValue = index + 1 // Order starts at 1
+        const newOrderValue = index + 1
         return pb.collection('Portfolio_Projects').update(project.id, {
           Order: newOrderValue,
         }, {
-          requestKey: null, // Disable auto-cancellation for batch updates
+          requestKey: null,
         })
       })
 
       await Promise.all(updatePromises)
+      toast.success('Projects reordered')
     }
     catch (err: unknown) {
       console.error('Error reordering projects:', err)
 
-      // Revert to original order on error
       await fetchProjects()
 
       const error = err as { message?: string }
-      showToast(`Failed to reorder projects: ${error?.message || 'Unknown error'}`, 'error')
+      toast.error(`Failed to reorder projects: ${error?.message || 'Unknown error'}`)
     }
     finally {
-      // Re-enable dragging after update completes
       setIsReordering(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-xl text-white">Loading...</div>
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex justify-between items-center">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="flex gap-3">
+              <Skeleton className="h-9 w-28" />
+              <Skeleton className="h-9 w-9" />
+              <Skeleton className="h-9 w-20" />
+            </div>
+          </div>
+          <Skeleton className="h-[680px] w-full" />
+          <div className="space-y-3 pt-8">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
     <motion.div
-      className="min-h-screen bg-black"
+      className="min-h-screen bg-background"
       style={{ fontFamily: 'EnduroWeb, sans-serif' }}
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
@@ -307,28 +296,33 @@ export default function AdminDashboard() {
       transition={{ duration: 0.4, ease: 'easeInOut' }}
     >
       {/* Header */}
-      <header className="border-b border-neutral-800/70 backdrop-blur-sm bg-black/80 sticky top-0 z-10">
+      <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-medium text-white tracking-tight">
+            <h1 className="text-xl font-medium text-foreground tracking-tight">
               Portfolio
             </h1>
-            <p className="text-xs text-neutral-500 mt-1 tracking-wide">
+            <p className="text-xs text-muted-foreground mt-1 tracking-wide">
               {projects.length}
               {' '}
               {projects.length === 1 ? 'project' : 'projects'}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <a
-              href="/"
-              className="px-4 py-2 text-xs tracking-wide text-neutral-400 hover:text-white transition-colors uppercase"
+            <Button
+              variant="ghost"
+              asChild
+              className="text-muted-foreground hover:text-foreground"
             >
-              View Portfolio
-            </a>
-            <button
+              <a href="/">
+                View Portfolio
+              </a>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowSettings(true)}
-              className="p-2 text-neutral-400 hover:text-white transition-colors"
+              className="text-muted-foreground hover:text-foreground"
               aria-label="Settings"
             >
               <svg
@@ -344,13 +338,13 @@ export default function AdminDashboard() {
                 <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                 <path d="M16.5 10c0 .5-.1 1-.2 1.4l1.4.8c.2.1.2.4.1.6l-1.5 2.6c-.1.2-.4.3-.6.2l-1.4-.8c-.6.5-1.3.9-2 1.1l-.3 1.6c0 .2-.2.4-.5.4h-3c-.3 0-.5-.2-.5-.4l-.3-1.6c-.7-.2-1.4-.6-2-1.1l-1.4.8c-.2.1-.5 0-.6-.2l-1.5-2.6c-.1-.2 0-.5.1-.6l1.4-.8c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4l-1.4-.8c-.2-.1-.2-.4-.1-.6l1.5-2.6c.1-.2.4-.3.6-.2l1.4.8c.6-.5 1.3-.9 2-1.1l.3-1.6c0-.2.2-.4.5-.4h3c.3 0 .5.2.5.4l.3 1.6c.7.2 1.4.6 2 1.1l1.4-.8c.2-.1.5 0 .6.2l1.5 2.6c.1.2 0 .5-.1.6l-1.4.8c.1.4.2.9.2 1.4z" />
               </svg>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               onClick={handleLogout}
-              className="px-4 py-2 text-xs tracking-wide bg-neutral-800/70 hover:bg-neutral-800 text-neutral-300 hover:text-white rounded-sm transition-colors uppercase"
             >
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -358,9 +352,11 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
         {error && (
-          <div className="bg-red-950/20 border border-red-800/30 text-red-200 px-4 py-3 rounded-sm mb-8 text-sm">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-8">
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Hero Image Section */}
@@ -383,7 +379,7 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
                 <div
-                  className="relative w-full rounded-sm overflow-hidden bg-neutral-900/30 border border-neutral-800/70 group"
+                  className="relative w-full rounded-sm overflow-hidden bg-card border border-border group"
                   style={{ height: '680px', boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.4)' }}
                 >
                   <img
@@ -433,25 +429,28 @@ export default function AdminDashboard() {
                       </div>
                       {isEditingTitle && (
                         <div className="absolute bottom-6 right-6 flex gap-2 z-10 pointer-events-none">
-                          <button
+                          <Button
+                            variant="outline"
+                            size="icon"
                             onClick={handleTitleCancel}
-                            className="w-10 h-10 flex items-center justify-center bg-black/60 border border-white/30 text-white rounded-sm hover:bg-black/80 transition-all shadow-lg backdrop-blur-md pointer-events-auto"
+                            className="bg-black/60 border-white/30 text-white hover:bg-black/80"
                             title="Cancel"
                           >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <line x1="18" y1="6" x2="6" y2="18"></line>
                               <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            size="icon"
                             onClick={handleTitleSave}
-                            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-sm hover:bg-neutral-100 transition-all shadow-lg pointer-events-auto"
+                            className="bg-white text-black hover:bg-neutral-100"
                             title="Save"
                           >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </>
@@ -460,9 +459,11 @@ export default function AdminDashboard() {
                   {/* Update Button Overlay - Bottom Right Corner Only */}
                   {!isEditingTitle && (
                     <div className="absolute bottom-0 right-0 p-6 pointer-events-auto group/update">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => heroFileInputRef.current?.click()}
-                        className="w-10 h-10 flex items-center justify-center bg-black/60 border border-neutral-700/60 text-neutral-200 rounded-sm hover:bg-black/80 hover:text-white hover:border-neutral-600/60 transition-all shadow-lg backdrop-blur-md opacity-0 group-hover/update:opacity-100"
+                        className="bg-black/60 border-border text-foreground hover:bg-black/80 opacity-0 group-hover/update:opacity-100"
                         title="Update Desktop Hero"
                       >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -470,7 +471,7 @@ export default function AdminDashboard() {
                           <circle cx="8.5" cy="8.5" r="1.5"></circle>
                           <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -488,7 +489,7 @@ export default function AdminDashboard() {
                 style={{ overflow: 'hidden' }}
               >
                 <div
-                  className="relative w-full rounded-sm overflow-hidden bg-neutral-900/30 border border-neutral-800/70 group"
+                  className="relative w-full rounded-sm overflow-hidden bg-card border border-border group"
                   style={{ height: '680px', boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.4)' }}
                 >
                   <img
@@ -538,25 +539,28 @@ export default function AdminDashboard() {
                       </div>
                       {isEditingTitle && (
                         <div className="absolute bottom-6 right-6 flex gap-2 z-10 pointer-events-none">
-                          <button
+                          <Button
+                            variant="outline"
+                            size="icon"
                             onClick={handleTitleCancel}
-                            className="w-9 h-9 flex items-center justify-center bg-black/60 border border-white/30 text-white rounded-sm hover:bg-black/80 transition-all shadow-lg backdrop-blur-md pointer-events-auto"
+                            className="h-9 w-9 bg-black/60 border-white/30 text-white hover:bg-black/80"
                             title="Cancel"
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <line x1="18" y1="6" x2="6" y2="18"></line>
                               <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            size="icon"
                             onClick={handleTitleSave}
-                            className="w-9 h-9 flex items-center justify-center bg-white text-black rounded-sm hover:bg-neutral-100 transition-all shadow-lg pointer-events-auto"
+                            className="h-9 w-9 bg-white text-black hover:bg-neutral-100"
                             title="Save"
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </>
@@ -565,9 +569,11 @@ export default function AdminDashboard() {
                   {/* Update Button Overlay - Bottom Right Corner Only */}
                   {!isEditingTitle && (
                     <div className="absolute bottom-0 right-0 p-6 pointer-events-auto group/update">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => heroMobileFileInputRef.current?.click()}
-                        className="w-9 h-9 flex items-center justify-center bg-black/60 border border-neutral-700/60 text-neutral-200 rounded-sm hover:bg-black/80 hover:text-white hover:border-neutral-600/60 transition-all shadow-lg backdrop-blur-md opacity-0 group-hover/update:opacity-100"
+                        className="h-9 w-9 bg-black/60 border-border text-foreground hover:bg-black/80 opacity-0 group-hover/update:opacity-100"
                         title="Update Mobile Hero"
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -575,7 +581,7 @@ export default function AdminDashboard() {
                           <circle cx="8.5" cy="8.5" r="1.5"></circle>
                           <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -601,7 +607,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Divider */}
-        <div className="border-t border-white/10 mb-12"></div>
+        <div className="border-t border-border mb-12"></div>
 
         {/* Projects List */}
         <Reorder.Group
@@ -615,127 +621,126 @@ export default function AdminDashboard() {
             <Reorder.Item
               key={project.id}
               value={project}
-              className="group bg-gradient-to-br from-neutral-900/50 to-neutral-900/30 rounded-sm border border-neutral-800/70 hover:border-neutral-700 hover:from-neutral-900/70 hover:to-neutral-900/50 cursor-grab active:cursor-grabbing flex items-stretch gap-0 overflow-hidden backdrop-blur-sm"
+              className="group cursor-grab active:cursor-grabbing overflow-hidden"
               style={{ position: 'relative' }}
               animate={{
                 scale: 1,
-                boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.4)',
                 zIndex: 1,
                 cursor: 'grab',
               }}
               whileDrag={{
                 scale: 1.01,
-                boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1)',
                 zIndex: 50,
                 cursor: 'grabbing',
               }}
             >
-              {/* Thumbnail */}
-              <div className="relative w-1/3 bg-neutral-900/80 overflow-hidden flex-shrink-0 border-r border-neutral-800/70 self-stretch">
-                {project.Images && project.Images.length > 0
-                  ? (
-                      <>
-                        <img
-                          src={getImageUrl(project, project.Images[0])}
-                          alt={project.Title}
-                          className="w-full h-full object-cover absolute inset-0"
-                        />
-                        {/* Blur Overlay on Hover */}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          whileHover={{
-                            opacity: 1,
-                            transition: { duration: 0.3, ease: 'easeIn' },
-                          }}
-                          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                        />
-                      </>
-                    )
-                  : (
-                      <div className="w-full h-full flex items-center justify-center bg-neutral-900/50">
-                        <span className="text-neutral-600 text-sm">–</span>
-                      </div>
-                    )}
-                <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-white px-2 py-1 rounded-sm text-xs font-medium tracking-wide">
-                  {project.Images?.length || 0}
-                  {' '}
-                  {project.Images?.length === 1 ? 'image' : 'images'}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0 p-5">
-                <div className="mb-2">
-                  <h3 className="font-semibold text-base text-white tracking-tight">
-                    {project.Title}
-                  </h3>
-                </div>
-                <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed mb-3">
-                  {project.Description}
-                </p>
-
-                {/* Responsibilities */}
-                {((project.Responsibility && project.Responsibility.length > 0)
-                  || (project.Responsibility_json && project.Responsibility_json.length > 0)) && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {(project.Responsibility_json || project.Responsibility || []).map((resp, idx) => (
-                      <span
-                        key={`${resp}-${idx}`}
-                        className="px-2.5 py-1 bg-neutral-800/70 border border-neutral-700/60 text-neutral-300 rounded-sm text-xs uppercase tracking-wider font-medium backdrop-blur-sm"
-                      >
-                        {resp}
-                      </span>
-                    ))}
+              <Item variant="outline" className="gap-0 p-0 hover:border-ring/50">
+                {/* Thumbnail */}
+                <ItemMedia variant="image" className="w-1/3 h-32 rounded-none border-r border-border relative overflow-hidden">
+                  {project.Images && project.Images.length > 0
+                    ? (
+                        <>
+                          <img
+                            src={getImageUrl(project, project.Images[0])}
+                            alt={project.Title}
+                            className="w-full h-full object-cover"
+                          />
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            whileHover={{
+                              opacity: 1,
+                              transition: { duration: 0.3, ease: 'easeIn' },
+                            }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                          />
+                        </>
+                      )
+                    : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <span className="text-muted-foreground text-sm">–</span>
+                        </div>
+                      )}
+                  <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-foreground px-2 py-1 rounded-sm text-xs font-medium tracking-wide">
+                    {project.Images?.length || 0}
+                    {' '}
+                    {project.Images?.length === 1 ? 'image' : 'images'}
                   </div>
-                )}
+                </ItemMedia>
 
-                {/* Actions */}
-                <div className="flex gap-2.5">
-                  <button
-                    onClick={() => setEditingProject(project)}
-                    className="px-5 py-2.5 bg-neutral-800/70 border border-neutral-700/60 text-neutral-200 rounded-sm text-xs hover:bg-neutral-700/60 hover:text-white hover:border-neutral-600 font-medium transition-all duration-200 uppercase tracking-wider shadow-sm hover:shadow-md"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(project.id)}
-                    className="px-5 py-2.5 bg-red-950/30 text-red-400 rounded-sm text-xs hover:bg-red-900/40 hover:text-red-300 font-medium transition-all duration-200 uppercase tracking-wider border border-red-900/40 hover:border-red-800/60 shadow-sm hover:shadow-md"
-                  >
-                    Delete
-                  </button>
+                {/* Content */}
+                <ItemContent className="p-4">
+                  <ItemTitle className="text-base">
+                    {project.Title}
+                  </ItemTitle>
+                  <ItemDescription className="line-clamp-2">
+                    {project.Description}
+                  </ItemDescription>
+
+                  {/* Responsibilities */}
+                  {((project.Responsibility && project.Responsibility.length > 0)
+                    || (project.Responsibility_json && project.Responsibility_json.length > 0)) && (
+                    <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                      {(project.Responsibility_json || project.Responsibility || []).map((resp, idx) => (
+                        <span
+                          key={`${resp}-${idx}`}
+                          className="px-2.5 py-1 bg-muted border border-border text-muted-foreground rounded-sm text-xs uppercase tracking-wider font-medium"
+                        >
+                          {resp}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-2.5 mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingProject(project)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDelete(project.id)}
+                      className="text-destructive hover:text-destructive/80"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </ItemContent>
+
+                {/* Drag Handle */}
+                <div className="flex items-center px-4 text-muted-foreground group-hover:text-foreground transition-colors duration-200 border-l border-border">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="9" cy="6" r="1.5" />
+                    <circle cx="9" cy="12" r="1.5" />
+                    <circle cx="9" cy="18" r="1.5" />
+                    <circle cx="15" cy="6" r="1.5" />
+                    <circle cx="15" cy="12" r="1.5" />
+                    <circle cx="15" cy="18" r="1.5" />
+                  </svg>
                 </div>
-              </div>
-
-              {/* Drag Handle */}
-              <div className="flex items-center px-4 text-neutral-700 group-hover:text-neutral-500 transition-colors duration-200 border-l border-neutral-800/70">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="9" cy="6" r="1.5" />
-                  <circle cx="9" cy="12" r="1.5" />
-                  <circle cx="9" cy="18" r="1.5" />
-                  <circle cx="15" cy="6" r="1.5" />
-                  <circle cx="15" cy="12" r="1.5" />
-                  <circle cx="15" cy="18" r="1.5" />
-                </svg>
-              </div>
+              </Item>
             </Reorder.Item>
           ))}
         </Reorder.Group>
 
         {projects.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-neutral-600 text-sm uppercase tracking-wider">No projects yet</p>
-            <p className="text-neutral-700 text-xs mt-2">Create your first project to get started</p>
+            <p className="text-muted-foreground text-sm uppercase tracking-wider">No projects yet</p>
+            <p className="text-muted-foreground/60 text-xs mt-2">Create your first project to get started</p>
           </div>
         )}
 
         {/* Create New Project Button */}
         <div className="mt-12">
-          <button
+          <Button
             onClick={() => setShowNewProjectForm(true)}
-            className="px-8 py-2.5 bg-white text-black rounded-sm text-sm hover:bg-neutral-100 transition-all font-medium tracking-wide uppercase hover:shadow-lg hover:shadow-white/5"
           >
             + New Project
-          </button>
+          </Button>
         </div>
       </main>
 
@@ -748,7 +753,14 @@ export default function AdminDashboard() {
             setEditingProject(null)
             setShowNewProjectForm(false)
           }}
-          onShowToast={showToast}
+          onShowToast={(message, type) => {
+            if (type === 'success') {
+              toast.success(message)
+            }
+            else {
+              toast.error(message)
+            }
+          }}
         />
       )}
 
@@ -756,68 +768,39 @@ export default function AdminDashboard() {
       <SettingsSidebar
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        onShowToast={showToast}
+        onShowToast={(message, type) => {
+          if (type === 'success') {
+            toast.success(message)
+          }
+          else {
+            toast.error(message)
+          }
+        }}
       />
 
       {/* Toast Notifications */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
-        {toasts.map(toast => (
-          <motion.div
-            key={toast.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className={`px-4 py-3 rounded-sm text-sm font-medium backdrop-blur-md pointer-events-auto ${
-              toast.type === 'success'
-                ? 'bg-green-500/20 border border-green-500/40 text-green-200'
-                : 'bg-red-500/20 border border-red-500/40 text-red-200'
-            }`}
-          >
-            {toast.message}
-          </motion.div>
-        ))}
-      </div>
+      <Toaster position="bottom-right" />
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmation && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
-          onClick={() => setDeleteConfirmation(null)}
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="bg-neutral-900/95 border border-neutral-800/70 rounded-sm p-6 max-w-sm mx-4"
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-medium text-white mb-2">Delete Project</h3>
-            <p className="text-sm text-neutral-400 mb-6">
+      <AlertDialog open={!!deleteConfirmation} onOpenChange={() => setDeleteConfirmation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to delete this project? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirmation(null)}
-                className="flex-1 px-4 py-2.5 bg-neutral-800/70 border border-neutral-700/60 text-neutral-200 rounded-sm text-sm hover:bg-neutral-700/60 hover:text-white font-medium transition-all uppercase tracking-wide"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 bg-red-950/30 text-red-400 rounded-sm text-sm hover:bg-red-900/40 hover:text-red-300 font-medium transition-all uppercase tracking-wide border border-red-900/40 hover:border-red-800/60"
-              >
-                Delete
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 text-destructive hover:text-destructive/80"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   )
 }

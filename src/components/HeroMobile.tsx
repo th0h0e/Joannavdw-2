@@ -52,7 +52,7 @@ export default function HeroMobile({ heroImage, heroTitle, isAboutPopupVisible, 
       <section
         id="hero-section"
         className="relative w-full snap-center bg-white flex items-center justify-center overflow-hidden"
-        style={{ height: isMobile ? '100lvh' : '100vh' }}
+        style={{ height: '100lvh' }}
       >
         {/* Hero Background Image */}
         <motion.div
@@ -94,8 +94,8 @@ export default function HeroMobile({ heroImage, heroTitle, isAboutPopupVisible, 
           style={{ left: '50%', marginLeft: '-12px', opacity: 1 }}
         >
           <ChevronDown
-            width={window.innerWidth >= 768 ? 28 : 24}
-            height={window.innerWidth >= 768 ? 28 : 24}
+            width={isMobile ? 24 : 28}
+            height={isMobile ? 24 : 28}
             color="white"
             className="drop-shadow-2xl"
           />

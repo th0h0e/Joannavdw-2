@@ -36,6 +36,9 @@ export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopup
           {/* Popup */}
           <motion.div
             className="fixed z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="about-popup-title"
             style={{
               top: '50%',
               left: '50%',
@@ -78,6 +81,7 @@ export default function AboutPopup({ isVisible, onClose, aboutData }: AboutPopup
                 {/* Content */}
                 <div className="flex-1 flex flex-col justify-center">
                   <h2
+                    id="about-popup-title"
                     className="text-black uppercase text-center leading-tight"
                     style={{
                       fontFamily: 'EnduroWeb, sans-serif',

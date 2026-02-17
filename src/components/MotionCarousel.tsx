@@ -14,6 +14,7 @@ interface MotionCarouselProps {
   onShowPopup?: (title: string) => void
   isPopupVisible?: boolean
   isAboutPopupVisible?: boolean
+  isMobile?: boolean
 }
 
 export default function MotionCarousel({
@@ -25,6 +26,7 @@ export default function MotionCarousel({
   onShowPopup,
   isPopupVisible = false,
   isAboutPopupVisible = false,
+  isMobile = false,
 }: MotionCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -318,8 +320,8 @@ export default function MotionCarousel({
                   }}
                 >
                   <ChevronDown
-                    width={window.innerWidth >= 768 ? 28 : 24}
-                    height={window.innerWidth >= 768 ? 28 : 24}
+                    width={isMobile ? 24 : 28}
+                    height={isMobile ? 24 : 28}
                     color="white"
                     className="drop-shadow-2xl"
                   />
