@@ -37,7 +37,7 @@ type ExpandType<T> = unknown extends T
 export type BaseSystemFields<T = unknown> = {
   id: RecordIdString
   collectionId: string
-  collectionName: Collections
+  collectionName: CollectionName
 } & ExpandType<T>
 
 export type AuthSystemFields<T = unknown> = {

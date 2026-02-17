@@ -1,9 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import ProjectCardSVG from '../assets/Project Card/JVDW WEB LIGHT BOX copy.svg'
 
-// Type for Framer Motion custom CSS properties animation
-interface ScaleAnimation { '--scale': number, 'opacity': number }
-
 interface ProjectPopupProps {
   isVisible: boolean
   onClose: () => void
@@ -40,9 +37,9 @@ export default function ProjectPopup({ isVisible, onClose, projectTitle, project
               position: 'fixed',
               transform: 'translate(-50%, -50%) scale(var(--scale, 1))',
             }}
-            initial={{ '--scale': 0.8, 'opacity': 0 } as ScaleAnimation}
-            animate={{ '--scale': 1, 'opacity': 1 } as ScaleAnimation}
-            exit={{ '--scale': 0.8, 'opacity': 0 } as ScaleAnimation}
+            initial={{ '--scale': 0.8, 'opacity': 0 } as any}
+            animate={{ '--scale': 1, 'opacity': 1 } as any}
+            exit={{ '--scale': 0.8, 'opacity': 0 } as any}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             <div className="relative">

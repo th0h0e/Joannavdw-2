@@ -690,7 +690,6 @@ function App() {
                     onShowPopup={handleShowPopup}
                     isPopupVisible={showPopup}
                     isAboutPopupVisible={showAboutPopup}
-                    isMobile={isMobile}
                   />
                 </section>
               ))}
