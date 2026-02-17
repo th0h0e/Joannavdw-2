@@ -649,6 +649,7 @@ function App() {
                     onShowPopup={handleShowPopup}
                     isPopupVisible={showPopup}
                     isAboutPopupVisible={showAboutPopup}
+                    screenWidth={screen?.width}
                   />
                 </section>
               ))}

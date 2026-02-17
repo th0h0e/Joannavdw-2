@@ -14,6 +14,7 @@ interface MotionCarouselDesktopProps {
   onShowPopup?: (title: string) => void
   isPopupVisible?: boolean
   isAboutPopupVisible?: boolean
+  screenWidth?: number
 }
 
 export default function MotionCarouselDesktop({
@@ -24,6 +25,7 @@ export default function MotionCarouselDesktop({
   onShowPopup,
   isPopupVisible = false,
   isAboutPopupVisible = false,
+  screenWidth,
 }: MotionCarouselDesktopProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -295,9 +297,10 @@ export default function MotionCarouselDesktop({
       {/* Progress Bar - Desktop */}
       {images.length > 1 && (
         <div
-          className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 w-4/5"
+          className="absolute bottom-7 z-20"
           style={{
-            transform: 'translate(-50%, 0) translateZ(0)',
+            width: screenWidth ? `${screenWidth * 0.8}px` : '80vw',
+            left: screenWidth ? `${screenWidth * 0.1}px` : '10vw',
             willChange: 'transform',
           }}
         >
