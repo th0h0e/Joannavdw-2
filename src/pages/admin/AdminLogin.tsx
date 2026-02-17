@@ -9,6 +9,15 @@ import loginBackground from '../../assets/admin-login-bg.jpg'
 import pb from '../../config/pocketbase'
 
 export default function AdminLogin() {
+  const [isDark, setIsDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -60,7 +69,7 @@ export default function AdminLogin() {
 
   return (
     <motion.div
-      className="min-h-screen bg-neutral-900 flex items-center justify-center px-6 relative overflow-hidden"
+      className={`min-h-screen flex items-center justify-center px-6 relative overflow-hidden bg-neutral-100 dark:bg-neutral-900${isDark ? ' dark' : ''}`}
       style={{ fontFamily: 'EnduroWeb, sans-serif' }}
       initial={{ x: '-100%' }}
       animate={{ x: 0 }}
@@ -81,19 +90,19 @@ export default function AdminLogin() {
       <div className="absolute inset-0 bg-black/70" />
 
       {/* Login Form */}
-      <div className="max-w-md w-full bg-black/80 rounded-sm border border-neutral-800/60 p-10 backdrop-blur-xl relative z-10">
+      <div className="max-w-md w-full bg-white/90 dark:bg-black/80 rounded-sm border border-neutral-200/60 dark:border-neutral-800/60 p-10 backdrop-blur-xl relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-xl font-medium text-white tracking-tight">
+          <h1 className="text-xl font-medium text-neutral-900 dark:text-white tracking-tight">
             Admin Login
           </h1>
-          <p className="text-xs text-neutral-400 mt-2 tracking-wide uppercase">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2 tracking-wide uppercase">
             Access Dashboard
           </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-neutral-400 text-xs uppercase tracking-wider">
+            <Label htmlFor="email" className="text-neutral-500 dark:text-neutral-400 text-xs uppercase tracking-wider">
               Email
             </Label>
             <Input
@@ -102,13 +111,13 @@ export default function AdminLogin() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="bg-neutral-800/60 border-neutral-700/60 text-white placeholder:text-neutral-500 focus-visible:ring-neutral-600"
+              className="bg-neutral-100/60 dark:bg-neutral-800/60 border-neutral-300/60 dark:border-neutral-700/60 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-600"
               placeholder="admin@example.com"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-neutral-400 text-xs uppercase tracking-wider">
+            <Label htmlFor="password" className="text-neutral-500 dark:text-neutral-400 text-xs uppercase tracking-wider">
               Password
             </Label>
             <Input
@@ -117,7 +126,7 @@ export default function AdminLogin() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="bg-neutral-800/60 border-neutral-700/60 text-white placeholder:text-neutral-500 focus-visible:ring-neutral-600"
+              className="bg-neutral-100/60 dark:bg-neutral-800/60 border-neutral-300/60 dark:border-neutral-700/60 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-600"
               placeholder="••••••••"
             />
           </div>
@@ -134,7 +143,7 @@ export default function AdminLogin() {
             type="submit"
             disabled={loading}
             variant="outline"
-            className="w-full border-neutral-700/60 bg-black/30 text-neutral-200 hover:bg-black/50 hover:text-white hover:border-neutral-600/60 disabled:bg-neutral-600 disabled:text-neutral-500 uppercase tracking-wide"
+            className="w-full border-neutral-300/60 dark:border-neutral-700/60 bg-neutral-100/30 dark:bg-black/30 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200/50 dark:hover:bg-black/50 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-400/60 dark:hover:border-neutral-600/60 disabled:bg-neutral-200 dark:disabled:bg-neutral-600 disabled:text-neutral-400 dark:disabled:text-neutral-500 uppercase tracking-wide"
           >
             {loading ? 'Logging in...' : 'Login'}
           </Button>
@@ -143,7 +152,7 @@ export default function AdminLogin() {
         <div className="mt-6 text-center">
           <a
             href="/"
-            className="text-xs text-neutral-400 hover:text-white transition-colors uppercase tracking-wide"
+            className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors uppercase tracking-wide"
           >
             ← Back to Portfolio
           </a>
