@@ -14,7 +14,6 @@ interface MotionCarouselProps {
   onShowPopup?: (title: string) => void
   isPopupVisible?: boolean
   isAboutPopupVisible?: boolean
-  isMobile?: boolean
 }
 
 export default function MotionCarousel({
@@ -26,7 +25,6 @@ export default function MotionCarousel({
   onShowPopup,
   isPopupVisible = false,
   isAboutPopupVisible = false,
-  isMobile = false,
 }: MotionCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -320,8 +318,8 @@ export default function MotionCarousel({
                   }}
                 >
                   <ChevronDown
-                    width={isMobile ? 24 : 28}
-                    height={isMobile ? 24 : 28}
+                    width={window.innerWidth >= 768 ? 28 : 24}
+                    height={window.innerWidth >= 768 ? 28 : 24}
                     color="white"
                     className="drop-shadow-2xl"
                   />
@@ -330,80 +328,80 @@ export default function MotionCarousel({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Project Title - Centered overlay */}
-      <div
-        className={`absolute top-1/2 left-1/2 z-[200] text-center w-full ${projectTitleContainerClasses}`}
-        style={{ transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}
-      >
-        <h1
-          className={`text-white ${projectTitleClasses} motion-project-title`}
-          style={{
-            fontFamily: 'EnduroWeb, sans-serif',
-            letterSpacing: '0.03em',
-            pointerEvents: 'auto',
-            cursor: 'pointer',
-            opacity: isPopupVisible || isAboutPopupVisible ? 0 : 1,
-            visibility: isPopupVisible || isAboutPopupVisible ? 'hidden' : 'visible',
-            transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out',
-          }}
-          onClick={() => {
-            if (isOnBlurSlide) {
-              scrollToNextSection()
-            }
-            else {
-              onShowPopup?.(projectTitle)
-            }
-          }}
-        >
-          {isOnBlurSlide ? 'NEXT PROJECT' : projectTitle}
-        </h1>
-      </div>
-
-      {/* Progress Bar (Bottom) - Mobile/Tablet */}
-      {images.length > 1 && (
+        {/* Project Title - Centered overlay */}
         <div
-          className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-full px-6"
-          style={{
-            opacity: currentSlide > 0 && currentSlide <= images.length ? 1 : 0,
-            transform: currentSlide > 0 && currentSlide <= images.length ? 'translate(-50%, 0)' : 'translate(-50%, 10px)',
-            transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
-            pointerEvents: currentSlide > 0 ? 'auto' : 'none',
-          }}
+          className={`absolute top-1/2 left-1/2 z-[200] text-center w-full ${projectTitleContainerClasses}`}
+          style={{ transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}
         >
-          <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
-            <div
-              className="h-full bg-gray-50"
-              style={{
-                width: `${scrollProgress * 100}%`,
-              }}
-            />
-          </div>
+          <h1
+            className={`text-white ${projectTitleClasses} motion-project-title`}
+            style={{
+              fontFamily: 'EnduroWeb, sans-serif',
+              letterSpacing: '0.03em',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              opacity: isPopupVisible || isAboutPopupVisible ? 0 : 1,
+              visibility: isPopupVisible || isAboutPopupVisible ? 'hidden' : 'visible',
+              transition: 'opacity 0.3s ease-in-out, visibility 0.3s ease-in-out',
+            }}
+            onClick={() => {
+              if (isOnBlurSlide) {
+                scrollToNextSection()
+              }
+              else {
+                onShowPopup?.(projectTitle)
+              }
+            }}
+          >
+            {isOnBlurSlide ? 'NEXT PROJECT' : projectTitle}
+          </h1>
         </div>
-      )}
 
-      {/* Progress Bar (Top) - Mobile/Tablet */}
-      {showTopProgressBar && images.length > 1 && (
-        <div
-          className="absolute top-5 left-1/2 -translate-x-1/2 z-20 w-full px-6"
-          style={{
-            opacity: currentSlide > 0 && currentSlide <= images.length ? 1 : 0,
-            transform: currentSlide > 0 && currentSlide <= images.length ? 'translate(-50%, 0)' : 'translate(-50%, -10px)',
-            transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
-            pointerEvents: currentSlide > 0 ? 'auto' : 'none',
-          }}
-        >
-          <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
-            <div
-              className="h-full bg-gray-50"
-              style={{
-                width: `${scrollProgress * 100}%`,
-              }}
-            />
+        {/* Progress Bar (Bottom) - Mobile/Tablet */}
+        {images.length > 1 && (
+          <div
+            className="absolute bottom-5 left-1/2 z-20 w-full px-6"
+            style={{
+              opacity: currentSlide > 0 && currentSlide <= images.length ? 1 : 0,
+              transform: currentSlide > 0 && currentSlide <= images.length ? 'translate(-50%, 0)' : 'translate(-50%, 10px)',
+              transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
+              pointerEvents: currentSlide > 0 ? 'auto' : 'none',
+            }}
+          >
+            <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className="h-full bg-gray-50"
+                style={{
+                  width: `${scrollProgress * 100}%`,
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Progress Bar (Top) - Mobile/Tablet */}
+        {showTopProgressBar && images.length > 1 && (
+          <div
+            className="absolute top-5 left-1/2 z-20 w-full px-6"
+            style={{
+              opacity: currentSlide > 0 && currentSlide <= images.length ? 1 : 0,
+              transform: currentSlide > 0 && currentSlide <= images.length ? 'translate(-50%, 0)' : 'translate(-50%, -10px)',
+              transition: 'opacity 0.15s ease-in-out, transform 0.15s ease-in-out',
+              pointerEvents: currentSlide > 0 ? 'auto' : 'none',
+            }}
+          >
+            <div className="h-0.5 bg-gray-500/50 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className="h-full bg-gray-50"
+                style={{
+                  width: `${scrollProgress * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
     </>
   )
