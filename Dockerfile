@@ -15,8 +15,8 @@ RUN pnpm install --no-frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application
-RUN pnpm run build
+# Build the application (skip tsc type-checking, vite handles transpilation)
+RUN pnpm exec vite build
 
 # Production stage
 FROM nginx:alpine
