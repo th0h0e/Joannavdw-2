@@ -6,7 +6,7 @@ import { toast, Toaster } from 'sonner'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item'
+import { Item, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item'
 import { Skeleton } from '@/components/ui/skeleton'
 import ProjectEditor from '../../components/admin/ProjectEditor'
 import SettingsSidebar from '../../components/admin/SettingsSidebar'
@@ -634,16 +634,16 @@ export default function AdminDashboard() {
                 cursor: 'grabbing',
               }}
             >
-              <Item variant="outline" className="gap-0 p-0 hover:border-ring/50">
+              <Item variant="outline" className="gap-0 p-0 hover:border-ring/50 items-stretch">
                 {/* Thumbnail */}
-                <ItemMedia variant="image" className="w-1/3 h-32 rounded-none border-r border-border relative overflow-hidden">
+                <div className="w-1/3 min-h-32 border-r border-border relative overflow-hidden bg-muted shrink-0">
                   {project.Images && project.Images.length > 0
                     ? (
                         <>
                           <img
                             src={getImageUrl(project, project.Images[0])}
                             alt={project.Title}
-                            className="w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -656,19 +656,19 @@ export default function AdminDashboard() {
                         </>
                       )
                     : (
-                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-muted-foreground text-sm">–</span>
                         </div>
                       )}
-                  <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-foreground px-2 py-1 rounded-sm text-xs font-medium tracking-wide">
+                  <div className="absolute top-2 left-2 bg-popover/80 backdrop-blur-md text-foreground px-2 py-1 rounded-sm text-xs font-medium tracking-wide z-10">
                     {project.Images?.length || 0}
                     {' '}
                     {project.Images?.length === 1 ? 'image' : 'images'}
                   </div>
-                </ItemMedia>
+                </div>
 
                 {/* Content */}
-                <ItemContent className="p-4">
+                <ItemContent className="p-4 self-center">
                   <ItemTitle className="text-base">
                     {project.Title}
                   </ItemTitle>
