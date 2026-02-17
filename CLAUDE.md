@@ -1,5 +1,7 @@
 # Joanna's Portfolio Website - Project Overview
 
+status:Feb17 Backed up Portfolio
+
 ## Project Structure
 This is a React + TypeScript + Vite project for a portfolio website with vertical full-screen sections, each containing horizontal image carousels.
 
