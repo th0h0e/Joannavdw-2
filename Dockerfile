@@ -3,17 +3,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Enable pnpm via corepack
+RUN corepack enable
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
 FROM nginx:alpine
