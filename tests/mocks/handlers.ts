@@ -1,6 +1,6 @@
 import { delay, http, HttpResponse } from 'msw'
 
-const POCKETBASE_URL = 'https://pocketbase-j0ososc8ckcw48sos8w0ccok.kontext.icu'
+const POCKETBASE_URL = 'https://admin.kontext.site'
 
 export const handlers = [
   http.post(
